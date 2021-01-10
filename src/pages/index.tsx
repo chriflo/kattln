@@ -1,6 +1,18 @@
+import React from 'react'
 import Link from 'next/link'
 
+function createRoomId() {
+  return Math.random().toString(36).substring(2)
+}
+
 export default function Home() {
+  const [name, setName] = React.useState('')
+
+  React.useEffect(() => {
+    const savedName = window.localStorage.getItem('name')
+    if (savedName) setName(savedName)
+  }, [])
+
   return (
     <main
       css={{
@@ -13,9 +25,14 @@ export default function Home() {
     >
       <div css={{ width: '200px' }}>
         <label htmlFor="name">Name</label>
-        <input type="text" id="name" />
-        <Link href="/room/1">
-          <button>Runde erstellen</button>
+        <input
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          type="text"
+          id="name"
+        />
+        <Link href={`/room/${createRoomId()}`}>
+          <button onClick={() => window.localStorage.setItem('name', name)}>Runde erstellen</button>
         </Link>
         <button>Runde beitreten</button>
       </div>
