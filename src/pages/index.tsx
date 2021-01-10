@@ -32,7 +32,14 @@ export default function Home() {
           id="name"
         />
         <Link href={`/room/${createRoomId()}`}>
-          <button onClick={() => window.localStorage.setItem('name', name)}>Runde erstellen</button>
+          <button
+            onClick={() => {
+              window.localStorage.setItem('name', name)
+              window.localStorage.setItem('id', Math.random().toString(36).substring(2))
+            }}
+          >
+            Runde erstellen
+          </button>
         </Link>
         <button>Runde beitreten</button>
       </div>
