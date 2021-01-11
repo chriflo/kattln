@@ -6,11 +6,8 @@ export default function Room() {
   const router = useRouter()
 
   React.useEffect(() => {
-    const savedName = window.localStorage.getItem('name')
-    if (!savedName) {
-      router.push('/')
-    } else {
-      setName(savedName)
+    if (!name) {
+      setName(prompt('Dein Spielername:'))
     }
   }, [])
 

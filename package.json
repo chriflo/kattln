@@ -10,6 +10,7 @@
   "dependencies": {
     "@emotion/babel-plugin": "^11.1.2",
     "@emotion/react": "^11.1.4",
+    "emotion-reset": "^3.0.0",
     "next": "10.0.5",
     "normalize.css": "^8.0.1",
     "pusher": "^4.0.2",
