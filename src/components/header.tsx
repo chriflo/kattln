@@ -14,8 +14,6 @@ export function Header(props: any) {
 }
 
 const headerStyles = css`
-  position: fixed;
-  top: 0;
   text-align: center;
   font-size: 32px;
   letter-spacing: 8px;
