@@ -5,7 +5,17 @@ import Head from 'next/head'
 
 export default function MyApp({ Component, pageProps }) {
   return (
-    <div css={{ overflow: 'hidden', height: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div
+      css={{
+        overflow: 'hidden',
+        height: '100vh',
+        width: '100vw',
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'fixed',
+        bottom: 0,
+      }}
+    >
       <Head>
         <link rel="icon" type="image/svg+xml" href="/leave.svg" />
       </Head>
