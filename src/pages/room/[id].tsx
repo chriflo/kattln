@@ -15,9 +15,11 @@ export default function Room() {
 
   return (
     <>
-      <h1>
-        Hi {name}! Runde - {id}
-      </h1>
+      {name.length > 0 ? (
+        <h1>
+          Hi {name}! Runde - {id}
+        </h1>
+      ) : null}
     </>
   )
 }
