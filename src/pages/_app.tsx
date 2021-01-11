@@ -20,7 +20,7 @@ export default function MyApp({ Component, pageProps }) {
         <link rel="icon" type="image/svg+xml" href="/leave.svg" />
       </Head>
       <GlobalStyles />
-      <Header />
+      <Header css={{ alignSelf: 'flex-start' }} />
       <main
         css={{
           display: 'flex',

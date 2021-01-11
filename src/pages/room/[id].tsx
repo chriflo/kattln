@@ -1,14 +1,21 @@
 import React from 'react'
 import { useRouter } from 'next/router'
 
+function forceUserToFillName(setName: React.Dispatch<string>) {
+  const answer = prompt('Dein Spielername:')
+  if (answer.length > 0) {
+    setName(answer)
+  } else {
+    forceUserToFillName(setName)
+  }
+}
+
 export default function Room() {
   const [name, setName] = React.useState('')
   const router = useRouter()
 
   React.useEffect(() => {
-    if (!name) {
-      setName(prompt('Dein Spielername:'))
-    }
+    forceUserToFillName(setName)
   }, [])
 
   const { id } = router.query
@@ -19,7 +26,9 @@ export default function Room() {
         <h1>
           Hi {name}! Runde - {id}
         </h1>
-      ) : null}
+      ) : (
+        'Bitte gib einen Namen ein'
+      )}
     </>
   )
 }
