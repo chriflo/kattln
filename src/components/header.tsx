@@ -21,5 +21,4 @@ const headerStyles = css`
   padding: 16px;
   background: ${colors.blue};
   color: ${colors.mint};
-  z-index: 0;
 `
