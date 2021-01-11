@@ -8,10 +8,7 @@ export function Header(props: any) {
       <h1 css={headerStyles} {...props}>
         Kattln
       </h1>
-      <img
-        src="/cards.svg"
-        css={{ width: 50, position: 'absolute', top: 5, right: 5, zIndex: 1 }}
-      />
+      <img src="/cards.svg" css={{ width: 50, position: 'fixed', top: 5, right: 5, zIndex: 1 }} />
     </>
   )
 }
