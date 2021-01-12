@@ -2,28 +2,14 @@ import React from 'react'
 import { useRouter } from 'next/router'
 import { useChannel } from '../../hooks/useChannel'
 
-function isComponentMounted() {
-  const [isComponentMounted, setIsComponentMounted] = React.useState(false)
-
-  React.useEffect(() => setIsComponentMounted(true), [])
-
-  return isComponentMounted
-}
-
-function forceUserToFillName(setName: React.Dispatch<string>, isClient: boolean) {
+function forceUserToFillName(setName: React.Dispatch<string>, userId: string) {
   const answer = prompt('Dein Spielername:')
   if (answer.length > 0) {
-    const id = Math.random().toString(36).substring(2)
-
     window.localStorage.setItem('name', answer)
-    window.localStorage.setItem('id', id)
+    window.localStorage.setItem('id', userId)
     setName(answer)
-    if (isClient) {
-      setCookie('id', id, 1)
-      setCookie('name', answer, 1)
-    }
   } else {
-    forceUserToFillName(setName, isClient)
+    forceUserToFillName(setName, userId)
   }
 }
 
@@ -34,10 +20,11 @@ interface CountData {
 export default function Room() {
   const [name, setName] = React.useState(undefined)
   const [sharedCount, setSharedCount] = React.useState(0)
-  const isClient = isComponentMounted()
+
+  const userId = Math.random().toString(36).substring(2)
 
   const id = useRouter().query.id?.toString()
-  const { members, channel } = useChannel(id, name)
+  const { members, channel } = useChannel(id, name, userId)
 
   React.useEffect(() => {
     if (channel) {
@@ -51,7 +38,7 @@ export default function Room() {
     if (savedName) {
       setName(savedName)
     } else {
-      forceUserToFillName(setName, isClient)
+      forceUserToFillName(setName, userId)
     }
   }, [channel])
 
@@ -83,14 +70,4 @@ export default function Room() {
       )}
     </>
   )
-}
-
-function setCookie(name: string, value: string, days: number) {
-  var expires = ''
-  if (days) {
-    var date = new Date()
-    date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000)
-    expires = '; expires=' + date.toUTCString()
-  }
-  document.cookie = name + '=' + (value || '') + expires + '; path=/'
 }

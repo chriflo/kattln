@@ -8,7 +8,7 @@ interface PusherMember {
   }
 }
 
-export function useChannel(channelId: string, name: string) {
+export function useChannel(channelId: string, name: string, id: string) {
   const [members, setMembers] = React.useState<PusherMember[]>([])
   const [channel, setChannel] = React.useState<PresenceChannel | undefined>()
 
@@ -16,6 +16,10 @@ export function useChannel(channelId: string, name: string) {
     console.log(`useChannel - channelId: ${channelId}`)
 
     if (!channelId || !name) return
+
+    setCookie('name', name, 1)
+    setCookie('id', id, 1)
+
     const pusher = new Pusher('50ae4175a7dd934129ab', {
       cluster: 'eu',
       authEndpoint: '/api/auth',
@@ -61,4 +65,14 @@ function getMembersArray(pusherMembers: Members) {
   const newMembers: PusherMember[] = []
   pusherMembers.each((member: PusherMember) => newMembers.push(member))
   return newMembers
+}
+
+function setCookie(name: string, value: string, days: number) {
+  var expires = ''
+  if (days) {
+    var date = new Date()
+    date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000)
+    expires = '; expires=' + date.toUTCString()
+  }
+  document.cookie = name + '=' + (value || '') + expires + '; path=/'
 }
