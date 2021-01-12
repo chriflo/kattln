@@ -8,17 +8,17 @@ interface PusherMember {
   }
 }
 
-export function useChannel(channelId: string, name: string, id: string) {
+export function useChannel(channelId: string, name: string, userId: string) {
   const [members, setMembers] = React.useState<PusherMember[]>([])
   const [channel, setChannel] = React.useState<PresenceChannel | undefined>()
 
   React.useEffect(() => {
     console.log(`useChannel - channelId: ${channelId}`)
 
-    if (!channelId || !name) return
+    if (!channelId || !name || !userId) return
 
     setCookie('name', name, 1)
-    setCookie('id', id, 1)
+    setCookie('id', userId, 1)
 
     const pusher = new Pusher('50ae4175a7dd934129ab', {
       cluster: 'eu',

@@ -2,14 +2,15 @@ import React from 'react'
 import { useRouter } from 'next/router'
 import { useChannel } from '../../hooks/useChannel'
 
-function forceUserToFillName(setName: React.Dispatch<string>, userId: string) {
+function forceUserToFillName(setName: React.Dispatch<string>, setUserId: React.Dispatch<string>) {
   const answer = prompt('Dein Spielername:')
   if (answer.length > 0) {
+    const userId = Math.random().toString(36).substring(2)
     window.localStorage.setItem('name', answer)
     window.localStorage.setItem('id', userId)
     setName(answer)
   } else {
-    forceUserToFillName(setName, userId)
+    forceUserToFillName(setName, setUserId)
   }
 }
 
@@ -19,9 +20,8 @@ interface CountData {
 
 export default function Room() {
   const [name, setName] = React.useState(undefined)
+  const [userId, setUserId] = React.useState(undefined)
   const [sharedCount, setSharedCount] = React.useState(0)
-
-  const userId = Math.random().toString(36).substring(2)
 
   const id = useRouter().query.id?.toString()
   const { members, channel } = useChannel(id, name, userId)
@@ -33,14 +33,18 @@ export default function Room() {
         setSharedCount(data.newCount)
       })
     }
-
-    const savedName = window.localStorage.getItem('name')
-    if (savedName) {
-      setName(savedName)
-    } else {
-      forceUserToFillName(setName, userId)
-    }
   }, [channel])
+
+  React.useEffect(() => {
+    const savedName = window.localStorage.getItem('name')
+    const savedId = window.localStorage.getItem('id')
+    if (savedName && savedId) {
+      setName(savedName)
+      setUserId(savedId)
+    } else {
+      forceUserToFillName(setName, setUserId)
+    }
+  }, [])
 
   function countUp() {
     const newCount = sharedCount + 1
