@@ -3,7 +3,7 @@ import 'normalize.css'
 import { GlobalStyles } from 'styles/global'
 import Head from 'next/head'
 
-export default function MyApp({ Component, pageProps }) {
+export default function MyApp({ Component, pageProps }: { Component: any; pageProps: any }) {
   return (
     <div
       css={{
