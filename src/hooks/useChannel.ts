@@ -13,8 +13,6 @@ export function useChannel(channelId: string, name: string, userId: string) {
   const [channel, setChannel] = React.useState<PresenceChannel | undefined>()
 
   React.useEffect(() => {
-    console.log(`useChannel - channelId: ${channelId}`)
-
     if (!channelId || !name || !userId) return
 
     setCookie('name', name, 1)
@@ -25,7 +23,7 @@ export function useChannel(channelId: string, name: string, userId: string) {
       authEndpoint: '/api/auth',
     })
 
-    console.log(`subscribing with channelId ${channelId} and name ${name}`)
+    console.log(`subscribing to channel ${channelId} with name ${name} and userId ${userId}`)
     const presenceChannel = pusher.subscribe(`presence-${channelId}`) as PresenceChannel
     setChannel(presenceChannel)
 
@@ -56,7 +54,7 @@ export function useChannel(channelId: string, name: string, userId: string) {
       presenceChannel.disconnect()
       pusher.disconnect()
     }
-  }, [channelId])
+  }, [channelId, name, userId])
 
   return { members, channel }
 }

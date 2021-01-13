@@ -8,6 +8,7 @@ function forceUserToFillName(setName: React.Dispatch<string>, setUserId: React.D
     const userId = Math.random().toString(36).substring(2)
     window.localStorage.setItem('name', answer)
     window.localStorage.setItem('id', userId)
+    setUserId(userId)
     setName(answer)
   } else {
     forceUserToFillName(setName, setUserId)
