@@ -46,7 +46,7 @@ export function useChannel(channelId: string, name: string, userId: string) {
       console.log('subscription error')
     })
 
-    pusher.bind_global((eventName: string, data: object) => {
+    pusher.bind_global((eventName: string, data: Record<string, unknown>) => {
       console.log(`Global event: ${eventName}:`, data)
     })
 
@@ -66,9 +66,9 @@ function getMembersArray(pusherMembers: Members) {
 }
 
 function setCookie(name: string, value: string, days: number) {
-  var expires = ''
+  let expires = ''
   if (days) {
-    var date = new Date()
+    const date = new Date()
     date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000)
     expires = '; expires=' + date.toUTCString()
   }

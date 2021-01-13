@@ -19,7 +19,7 @@ export function IconButton({ title, svgName, ...props }: { title: string; svgNam
   return (
     <button css={styles.button} title={title} {...props}>
       <div css={styles.icon}>
-        <img src={`/${svgName}.svg`} css={{ width: '80%', height: 'auto' }} />
+        <img alt="" src={`/${svgName}.svg`} css={{ width: '80%', height: 'auto' }} />
       </div>
       {title}
     </button>

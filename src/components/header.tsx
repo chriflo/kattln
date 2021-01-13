@@ -6,7 +6,11 @@ export function Header(props: any) {
   return (
     <header css={headerStyles} {...props}>
       <h1>Kattln</h1>
-      <img src="/cards.svg" css={{ width: 50, position: 'fixed', top: 5, right: 5, zIndex: 1 }} />
+      <img
+        src="/cards.svg"
+        alt=""
+        css={{ width: 50, position: 'fixed', top: 5, right: 5, zIndex: 1 }}
+      />
     </header>
   )
 }
