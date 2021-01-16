@@ -1,12 +1,12 @@
-import { User } from 'model/user'
+import { Player } from 'model/player'
 import React from 'react'
 
-export function useForceUserName(): User {
-  const [user] = React.useState<User | null>(() => {
+export function useForceUserName(): Player {
+  const [user] = React.useState<Player | null>(() => {
     return typeof window === 'undefined' ? null : forceUserToFillName()
   })
 
-  return { name: user?.name, id: user?.id }
+  return { name: user?.name ?? 'server-placeholder', id: user?.id ?? 'server-placeholder' }
 }
 
 function forceUserToFillName(): { name: string; id: string } {
