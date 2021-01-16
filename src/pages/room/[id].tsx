@@ -2,54 +2,44 @@ import React from 'react'
 import { useRouter } from 'next/router'
 import { useChannel } from '../../hooks/useChannel'
 
-function forceUserToFillName(setName: React.Dispatch<string>, setUserId: React.Dispatch<string>) {
-  const answer = prompt('Dein Spielername:')
+function forceUserToFillName(): { name: string; id: string } {
+  const answer = prompt('Dein Spielername:') ?? ''
   if (answer.length > 0) {
     const userId = Math.random().toString(36).substring(2)
-    window.localStorage.setItem('name', answer)
-    window.localStorage.setItem('id', userId)
-    setUserId(userId)
-    setName(answer)
+    return { name: answer, id: userId }
   } else {
-    forceUserToFillName(setName, setUserId)
+    return forceUserToFillName()
   }
 }
 
-interface CountData {
-  newCount: number
-}
-
 export default function Room() {
-  const [name, setName] = React.useState(undefined)
-  const [userId, setUserId] = React.useState(undefined)
+  const [name, setName] = React.useState<string | undefined>(undefined)
+  const [userId, setUserId] = React.useState<string | undefined>(undefined)
   const [sharedCount, setSharedCount] = React.useState(0)
 
   const id = useRouter().query.id?.toString()
+  if (!id) throw new Error('Id of room is undefined')
+
+  React.useEffect(() => {
+    const { name, id } = forceUserToFillName()
+    setName(name)
+    setUserId(id)
+  }, [])
+
   const { members, channel } = useChannel(id, name, userId)
 
   React.useEffect(() => {
     if (channel) {
-      channel.bind('client-countup', (data: CountData) => {
+      channel.bind('client-countup', (data: { newCount: number }) => {
         console.log('client-countup')
         setSharedCount(data.newCount)
       })
     }
   }, [channel])
 
-  React.useEffect(() => {
-    const savedName = window.localStorage.getItem('name')
-    const savedId = window.localStorage.getItem('id')
-    if (savedName && savedId) {
-      setName(savedName)
-      setUserId(savedId)
-    } else {
-      forceUserToFillName(setName, setUserId)
-    }
-  }, [])
-
   function countUp() {
     const newCount = sharedCount + 1
-    channel.trigger('client-countup', { newCount })
+    channel?.trigger('client-countup', { newCount })
     // client events aren't triggered on the client sending them
     setSharedCount(newCount)
   }

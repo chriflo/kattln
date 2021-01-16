@@ -8,7 +8,7 @@ interface PusherMember {
   }
 }
 
-export function useChannel(channelId: string, name: string, userId: string) {
+export function useChannel(channelId: string, name?: string, userId?: string) {
   const [members, setMembers] = React.useState<PusherMember[]>([])
   const [channel, setChannel] = React.useState<PresenceChannel | undefined>()
 
