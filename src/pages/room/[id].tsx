@@ -1,40 +1,21 @@
 import React from 'react'
 import { useRouter } from 'next/router'
-import { useChannel } from '../../hooks/useChannel'
-
-function forceUserToFillName(): { name: string; id: string } {
-  const answer = prompt('Dein Spielername:') ?? ''
-  if (answer.length > 0) {
-    const userId = Math.random().toString(36).substring(2)
-    return { name: answer, id: userId }
-  } else {
-    return forceUserToFillName()
-  }
-}
+import { useChannel } from '../../hooks/use-channel'
+import { useForceUserName } from 'hooks/use-force-user-name'
 
 export default function Room() {
-  const [name, setName] = React.useState<string | undefined>(undefined)
-  const [userId, setUserId] = React.useState<string | undefined>(undefined)
+  const { name: userName, id: userId } = useForceUserName()
   const [sharedCount, setSharedCount] = React.useState(0)
 
   const id = useRouter().query.id?.toString()
-  if (!id) throw new Error('Id of room is undefined')
+
+  const { members, channel } = useChannel(id, userName, userId)
 
   React.useEffect(() => {
-    const { name, id } = forceUserToFillName()
-    setName(name)
-    setUserId(id)
-  }, [])
-
-  const { members, channel } = useChannel(id, name, userId)
-
-  React.useEffect(() => {
-    if (channel) {
-      channel.bind('client-countup', (data: { newCount: number }) => {
-        console.log('client-countup')
-        setSharedCount(data.newCount)
-      })
-    }
+    channel?.bind('client-countup', (data: { newCount: number }) => {
+      console.log('client-countup')
+      setSharedCount(data.newCount)
+    })
   }, [channel])
 
   function countUp() {
@@ -44,25 +25,20 @@ export default function Room() {
     setSharedCount(newCount)
   }
 
+  if (!userName) return <p>Bitte gib einen Namen ein</p>
   return (
-    <>
-      {name && name.length > 0 ? (
-        <>
-          <h1>Runde - {id}</h1>
-          <p>
-            Hi {name}! Es sind {members.length} Spieler am Tisch:
-          </p>
-          <ul>
-            {members.map((member) => {
-              return <li key={member.id}>{member.info.name}</li>
-            })}
-          </ul>
-          <button onClick={() => countUp()}>Count up</button>
-          <div>Shared count: {sharedCount}</div>
-        </>
-      ) : (
-        'Bitte gib einen Namen ein'
-      )}
-    </>
+    <p>
+      <h1>Runde - {id}</h1>
+      <p>
+        Hi {userName}! Es sind {members.length} Spieler am Tisch:
+      </p>
+      <ul>
+        {members.map((member) => {
+          return <li key={member.id}>{member.info.name}</li>
+        })}
+      </ul>
+      <button onClick={() => countUp()}>Count up</button>
+      <div>Shared count: {sharedCount}</div>
+    </p>
   )
 }
