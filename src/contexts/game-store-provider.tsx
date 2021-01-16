@@ -9,21 +9,21 @@ export interface GameState {
   currentPlayerId: string
 }
 
-const GameStateContext = React.createContext<
-  { state: GameState; trigger: (newGameState: GameState) => void; players: Player[] } | undefined
->(undefined)
+interface GameStore {
+  state: GameState | null
+  trigger: (newGameState: GameState) => void
+  players: Player[]
+}
+const GameStoreContext = React.createContext<GameStore | undefined>(undefined)
 
-export function GameStoreProvider({
-  channel,
-  children,
-}: {
+interface GameStoreProviderProps {
   channel: PresenceChannel | undefined
-  children: React.ReactNode
-}) {
+  game: JSX.Element
+  lobby: JSX.Element
+}
+export function GameStoreProvider({ channel, game, lobby }: GameStoreProviderProps) {
+  const [gameState, setGameState] = React.useState<GameState | null>(null)
   const players = getPlayersFromMembers(channel?.members)
-  const initialGameState: GameState = { count: 0, currentPlayerId: players[0].id }
-
-  const [gameState, setGameState] = React.useState(initialGameState)
 
   useEvent(channel, 'client-countup', (gameState: GameState) => setGameState(gameState))
   const trigger = useClientTrigger<GameState>(channel)
@@ -35,15 +35,14 @@ export function GameStoreProvider({
   }
 
   return (
-    <GameStateContext.Provider value={{ state: gameState, trigger: triggerNewGameState, players }}>
-      {children}
-    </GameStateContext.Provider>
+    <GameStoreContext.Provider value={{ state: gameState, trigger: triggerNewGameState, players }}>
+      {gameState === null ? lobby : game}
+    </GameStoreContext.Provider>
   )
 }
 
 export function useGameStore() {
-  const context = React.useContext(GameStateContext)
-  if (!context?.state || !context.trigger || !context.players)
-    throw Error('useGameStore must be used within a GameStateProvider')
+  const context = React.useContext(GameStoreContext)
+  if (!context) throw Error('useGameStore must be used within a GameStateProvider')
   return context
 }

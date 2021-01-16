@@ -7,19 +7,24 @@ interface GameProps {
 
 export function Game({ me }: GameProps) {
   const { state, trigger, players } = useGameStore()
+  if (!state || players.length < 1) throw Error('Invalid state in game')
 
-  function onClickCount() {
-    if (!isItMyTurn(state.currentPlayerId, me.id)) return
+  function onClickCount(currentState: GameState) {
+    if (!isItMyTurn(currentState.currentPlayerId, me.id)) return
 
     trigger({
-      count: state.count + 1,
-      currentPlayerId: players[findNextPlayerIndex(players, state)].id,
+      count: currentState.count + 1,
+      currentPlayerId: players[findNextPlayerIndex(players, currentState)].id,
     })
   }
+
   return (
     <div>
       <p>{me.name}</p>
-      <button disabled={!isItMyTurn(state.currentPlayerId, me.id)} onClick={() => onClickCount()}>
+      <button
+        disabled={!isItMyTurn(state.currentPlayerId, me.id)}
+        onClick={() => onClickCount(state)}
+      >
         Count up
       </button>
       <div>Shared count: {state.count}</div>

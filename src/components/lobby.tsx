@@ -1,16 +1,13 @@
+import { useGameStore } from 'contexts/game-store-provider'
 import { Player } from 'model/player'
 
-export function Lobby({
-  roomId,
-  me,
-  players,
-  onStartGame,
-}: {
-  roomId: string
-  me: Player
-  players: Player[]
-  onStartGame: () => void
-}) {
+export function Lobby({ roomId, me }: { roomId: string; me: Player }) {
+  const { trigger, players } = useGameStore()
+
+  function onStartGame() {
+    trigger({ count: 0, currentPlayerId: players[0].id })
+  }
+
   return (
     <>
       <h1>Runde - {roomId}</h1>
