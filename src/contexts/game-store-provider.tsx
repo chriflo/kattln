@@ -1,4 +1,4 @@
-import { useClientTrigger } from '@harelpls/use-pusher'
+import { useClientTrigger, useEvent } from '@harelpls/use-pusher'
 import { Player } from 'model/player'
 import { getPlayersFromMembers } from 'model/pusher-members'
 import { PresenceChannel } from 'pusher-js'
@@ -25,6 +25,7 @@ export function GameStoreProvider({
 
   const [gameState, setGameState] = React.useState(initialGameState)
 
+  useEvent(channel, 'client-countup', (gameState: GameState) => setGameState(gameState))
   const trigger = useClientTrigger<GameState>(channel)
 
   function triggerNewGameState(newGameState: GameState) {
