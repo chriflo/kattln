@@ -1,4 +1,5 @@
 import { Player } from 'model/player'
+import React from 'react'
 import { GameState, useGameStore } from '../contexts/game-store-provider'
 
 interface GameProps {
@@ -6,6 +7,7 @@ interface GameProps {
 }
 
 export function Game({ me }: GameProps) {
+  const [value, setValue] = React.useState(1)
   const { state, trigger, players } = useGameStore()
   if (!state || players.length < 1) throw Error('Invalid state in game')
 
@@ -13,7 +15,7 @@ export function Game({ me }: GameProps) {
     if (!isItMyTurn(currentState.currentPlayerId, me.id)) return
 
     trigger({
-      count: currentState.count + 1,
+      count: currentState.count + value,
       currentPlayerId: players[findNextPlayerIndex(players, currentState)].id,
     })
   }
@@ -21,6 +23,15 @@ export function Game({ me }: GameProps) {
   return (
     <div>
       <p>{me.name}</p>
+      <input
+        value={value}
+        type="number"
+        required
+        onChange={(e) => {
+          const number = parseInt(e.target.value)
+          setValue(number)
+        }}
+      />
       <button
         disabled={!isItMyTurn(state.currentPlayerId, me.id)}
         onClick={() => onClickCount(state)}
