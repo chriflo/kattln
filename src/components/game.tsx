@@ -9,7 +9,7 @@ interface GameProps {
 }
 export function Game({ me, gameState, players, triggerNewGameState }: GameProps) {
   function onClickCount() {
-    if (gameState.currentPlayerId !== me.id) return
+    if (!isItMyTurn(gameState.currentPlayerId, me.id)) return
 
     triggerNewGameState({
       count: gameState.count + 1,
@@ -19,7 +19,12 @@ export function Game({ me, gameState, players, triggerNewGameState }: GameProps)
   return (
     <div>
       <p>{me.name}</p>
-      <button onClick={() => onClickCount()}>Count up</button>
+      <button
+        disabled={!isItMyTurn(gameState.currentPlayerId, me.id)}
+        onClick={() => onClickCount()}
+      >
+        Count up
+      </button>
       <div>Shared count: {gameState.count}</div>
       <p>Aktueller Spieler: {players.find((m) => gameState.currentPlayerId === m.id)?.name}</p>
     </div>
@@ -29,4 +34,8 @@ export function Game({ me, gameState, players, triggerNewGameState }: GameProps)
 function findNextPlayerIndex(players: Player[], gameState: GameState) {
   const currentPlayerIndex = players.findIndex((member) => gameState.currentPlayerId === member.id)
   return currentPlayerIndex < players.length - 1 ? currentPlayerIndex + 1 : 0
+}
+
+function isItMyTurn(currentPlayerId: string, myId: string): boolean {
+  return currentPlayerId === myId
 }
