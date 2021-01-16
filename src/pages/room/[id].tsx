@@ -1,35 +1,27 @@
 import { usePresenceChannel } from '@harelpls/use-pusher'
 import { Game } from 'components/game'
+import { GameStoreProvider, GameState } from 'contexts/game-store-provider'
 import { useForceUserName } from 'hooks/use-force-user-name'
-import { GameState, useGameState } from 'hooks/use-game-state'
 import { getPlayersFromMembers } from 'model/pusher-members'
 import { useRouter } from 'next/router'
 import React from 'react'
 
 export default function Room() {
+  const [gameStarted, setGameStarted] = React.useState(false)
   const id = useRouter().query.id?.toString()
 
   const me = useForceUserName()
   const { channel } = usePresenceChannel(id ? `presence-${id}` : undefined)
-  const { gameState, triggerNewGameState } = useGameState(channel)
 
   const players = getPlayersFromMembers(channel?.members)
 
-  function onClickStartGame() {
-    if (players && players.length < 1) throw new Error(`Can't start game without players`)
-    const initialGameState: GameState = { count: 0, currentPlayerId: players[0].id }
-    triggerNewGameState(initialGameState)
-  }
-
-  if (gameState && me.id)
+  if (gameStarted && me.id)
     return (
-      <Game
-        me={me}
-        players={players}
-        gameState={gameState}
-        triggerNewGameState={triggerNewGameState}
-      />
+      <GameStoreProvider channel={channel}>
+        <Game me={me} />
+      </GameStoreProvider>
     )
+
   return (
     <>
       <h1>Runde - {id}</h1>
@@ -43,7 +35,7 @@ export default function Room() {
           </li>
         ))}
       </ul>
-      <button onClick={onClickStartGame}>Start game</button>
+      <button onClick={() => setGameStarted(true)}>Start game</button>
     </>
   )
 }
