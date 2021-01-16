@@ -1,30 +1,23 @@
 import React from 'react'
 import { useRouter } from 'next/router'
 import { useForceUserName } from 'hooks/use-force-user-name'
-import { useClientTrigger, useEvent, usePresenceChannel } from '@harelpls/use-pusher'
+import { usePresenceChannel } from '@harelpls/use-pusher'
 import { Members } from 'pusher-js'
+import { useGameState } from 'hooks/use-game-state'
 
-interface GameState {
-  count: number
-  currentPlayerId: string
-}
 export default function Room() {
-  const { name: myName, id: myId } = useForceUserName()
-  const [gameState, setGameState] = React.useState<GameState | null>(null)
-
   const id = useRouter().query.id?.toString()
+
+  const { name: myName, id: myId } = useForceUserName()
 
   const { channel } = usePresenceChannel(id ? `presence-${id}` : undefined)
   const members = getMembersArray(channel?.members)
 
-  useEvent(channel, 'client-countup', (gameState: GameState) => setGameState(gameState))
-  const trigger = useClientTrigger<GameState>(channel)
+  const { gameState, triggerNewGameState } = useGameState(channel)
 
   function onClickStartGame() {
     const initialGameState = { count: 0, currentPlayerId: members[0].id }
-    trigger('client-countup', initialGameState)
-    // client events aren't triggered on the client sending them
-    setGameState(initialGameState)
+    triggerNewGameState(initialGameState)
   }
 
   if (!gameState)
@@ -54,13 +47,13 @@ export default function Room() {
       (member) => gameState?.currentPlayerId === member.id,
     )
     const nextPlayer = currentPlayerIndex < members.length - 1 ? currentPlayerIndex + 1 : 0
-    const nextPlayerId = members[nextPlayer].id
-    trigger('client-countup', {
+
+    const newGameState = {
       count,
       currentPlayerId: members[nextPlayer].id,
-    })
-    // client events aren't triggered on the client sending them
-    setGameState({ count, currentPlayerId: nextPlayerId })
+    }
+
+    triggerNewGameState(newGameState)
   }
   return (
     <div>
