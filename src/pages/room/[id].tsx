@@ -6,22 +6,25 @@ import { Members } from 'pusher-js'
 
 interface GameState {
   count: number
+  currentPlayerId: string
 }
 export default function Room() {
-  const { name: userName } = useForceUserName()
+  const { name: myName, id: myId } = useForceUserName()
   const [gameState, setGameState] = React.useState<GameState | null>(null)
 
   const id = useRouter().query.id?.toString()
 
-  const { channel, myID } = usePresenceChannel(id ? `presence-${id}` : undefined)
+  const { channel } = usePresenceChannel(id ? `presence-${id}` : undefined)
   const members = getMembersArray(channel?.members)
 
-  useEvent(channel, 'client-countup', ({ count }: GameState) => setGameState({ count }))
+  useEvent(channel, 'client-countup', (gameState: GameState) => setGameState(gameState))
   const trigger = useClientTrigger<GameState>(channel)
 
   function onClickStartGame() {
-    trigger('client-countup', { count: 0 })
-    setGameState({ count: 0 })
+    const initialGameState = { count: 0, currentPlayerId: members[0].id }
+    trigger('client-countup', initialGameState)
+    // client events aren't triggered on the client sending them
+    setGameState(initialGameState)
   }
 
   if (!gameState)
@@ -29,7 +32,7 @@ export default function Room() {
       <div>
         <h1>Runde - {id}</h1>
         <p>
-          Hi {userName} {myID}! Es sind {members.length} Spieler am Tisch:
+          Hi {myName}! Es sind {members.length} Spieler am Tisch:
         </p>
         <ul>
           {members.map((member) => {
@@ -45,16 +48,26 @@ export default function Room() {
     )
 
   function onClickCount() {
+    if (gameState?.currentPlayerId !== myId) return
     const count = (gameState?.count ?? 0) + 1
-    console.log(count)
-    trigger('client-countup', { count })
+    const currentPlayerIndex = members.findIndex(
+      (member) => gameState?.currentPlayerId === member.id,
+    )
+    const nextPlayer = currentPlayerIndex < members.length - 1 ? currentPlayerIndex + 1 : 0
+    const nextPlayerId = members[nextPlayer].id
+    trigger('client-countup', {
+      count,
+      currentPlayerId: members[nextPlayer].id,
+    })
     // client events aren't triggered on the client sending them
-    setGameState({ count })
+    setGameState({ count, currentPlayerId: nextPlayerId })
   }
   return (
     <div>
+      <p>{myName}</p>
       <button onClick={() => onClickCount()}>Count up</button>
       <div>Shared count: {gameState.count}</div>
+      <p>Aktueller Spieler: {members.find((m) => gameState.currentPlayerId === m.id)?.info.name}</p>
     </div>
   )
 }
