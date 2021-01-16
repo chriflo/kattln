@@ -1,7 +1,5 @@
 import React from 'react'
 import Pusher, { Members, PresenceChannel } from 'pusher-js'
-import { useRecoilState } from 'recoil'
-import { sharedCountState } from 'atoms'
 
 interface PusherMember {
   id: string
@@ -10,60 +8,41 @@ interface PusherMember {
   }
 }
 
-export function useChannel(
-  channelId: string | undefined,
-  name: string,
-  userId: string,
-): { channel?: PresenceChannel; members: PusherMember[] } {
-  const [pusher] = React.useState(
-    () =>
-      new Pusher('50ae4175a7dd934129ab', {
-        cluster: 'eu',
-        authEndpoint: '/api/auth',
-      }),
-  )
-
-  const [channel, setChannel] = React.useState<PresenceChannel | undefined>(undefined)
+export function useChannel(channelId: string, name: string, userId: string) {
+  const [members, setMembers] = React.useState<PusherMember[]>([])
+  const [channel, setChannel] = React.useState<PresenceChannel | undefined>()
 
   React.useEffect(() => {
-    if (!channelId || !name || !userId) return undefined
+    if (!channelId || !name || !userId) return
 
     setCookie('name', name, 1)
     setCookie('id', userId, 1)
+
+    const pusher = new Pusher('50ae4175a7dd934129ab', {
+      cluster: 'eu',
+      authEndpoint: '/api/auth',
+    })
+
     console.log(`subscribing to channel ${channelId} with name ${name} and userId ${userId}`)
-    setChannel(pusher.subscribe(`presence-${channelId}`) as PresenceChannel)
-  }, [channelId, name, pusher, userId])
+    const presenceChannel = pusher.subscribe(`presence-${channelId}`) as PresenceChannel
+    setChannel(presenceChannel)
 
-  const [members, setMembers] = React.useState<PusherMember[]>(getMembersArray(channel?.members))
-
-  const [sharedCount, setSharedCount] = useRecoilState(sharedCountState)
-
-  React.useEffect(() => {
-    channel?.bind('pusher:member_added', () => {
-      console.log('member added')
-      setMembers(getMembersArray(channel.members))
-    })
-  }, [channel, sharedCount])
-
-  React.useEffect(() => {
-    channel?.bind('client-countup', (data) => {
-      console.log('setting new count to', data.newCount)
-      setSharedCount(data.newCount)
-    })
-  }, [channel, setSharedCount])
-
-  React.useEffect(() => {
-    channel?.bind('pusher:subscription_succeeded', () => {
+    presenceChannel.bind('pusher:subscription_succeeded', () => {
       console.log('subscription succeeded')
-      setMembers(getMembersArray(channel.members))
+      setMembers(getMembersArray(presenceChannel.members))
     })
 
-    channel?.bind('pusher:member_removed', () => {
+    presenceChannel.bind('pusher:member_added', () => {
+      console.log('member added')
+      setMembers(getMembersArray(presenceChannel.members))
+    })
+
+    presenceChannel.bind('pusher:member_removed', () => {
       console.log('member removed')
-      setMembers(getMembersArray(channel.members))
+      setMembers(getMembersArray(presenceChannel.members))
     })
 
-    channel?.bind('pusher:subscription_error', () => {
+    presenceChannel.bind('pusher:subscription_error', () => {
       console.log('subscription error')
     })
 
@@ -72,17 +51,17 @@ export function useChannel(
     })
 
     return () => {
-      channel?.disconnect()
-      channel && pusher.disconnect()
+      presenceChannel.disconnect()
+      pusher.disconnect()
     }
-  }, [channel, channelId, name, pusher, userId])
+  }, [channelId, name, userId])
 
   return { members, channel }
 }
 
-function getMembersArray(pusherMembers: Members | undefined): PusherMember[] {
+function getMembersArray(pusherMembers: Members) {
   const newMembers: PusherMember[] = []
-  pusherMembers?.each((member: PusherMember) => newMembers.push(member))
+  pusherMembers.each((member: PusherMember) => newMembers.push(member))
   return newMembers
 }
 
