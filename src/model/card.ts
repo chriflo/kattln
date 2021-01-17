@@ -8,7 +8,7 @@ export interface Card {
   id: string
 }
 
-const allIcons: Icon[] = ['eichel', 'blatt', 'herz', 'schelle']
+export const allIcons: Icon[] = ['eichel', 'blatt', 'herz', 'schelle']
 const allNames: CardName[] = ['A', 'K', 'O', 'U', '10', '9', '8', '7']
 
 const allCards: Card[] = allIcons.flatMap((icon) => {

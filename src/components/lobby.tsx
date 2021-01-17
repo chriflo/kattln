@@ -18,6 +18,7 @@ export function Lobby({ roomId, me }: { roomId: string; me: Player }) {
       playersInGame: playersWithCards,
       stack: [],
       order: players.map((p) => p.id),
+      gameStage: 'choose-game',
     })
   }
 

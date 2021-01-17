@@ -10,6 +10,8 @@ export interface GameState {
   playersInGame: PlayerInGame[]
   stack: Card[]
   order: string[]
+  gameStage: 'choose-game' | 'playing'
+  gamePlayed?: { gameType: string; player: Player }
 }
 
 interface GameStore {

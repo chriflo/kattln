@@ -1,3 +1,4 @@
+import { games } from 'model/game'
 import { Player, PlayerInGame } from 'model/player'
 import React from 'react'
 import { GameState, useGameStore } from '../contexts/game-store-provider'
@@ -30,18 +31,48 @@ export function Game({ me }: GameProps) {
     })
 
     trigger({
+      ...currentState,
       currentPlayerId: currentState.order[findNextPlayerIndex(currentState)],
       playersInGame: updatedPlayers,
       stack: [playedCard, ...(currentState?.stack ?? [])],
-      order: currentState.order,
     })
+  }
+
+  function updateGameType(currentState: GameState, game: string) {
+    if (!isItMyTurn(currentState.currentPlayerId, me.id)) return
+
+    if (game === 'weiter') {
+      trigger({
+        ...currentState,
+        currentPlayerId: currentState.order[findNextPlayerIndex(currentState)],
+      })
+    } else {
+      trigger({
+        ...currentState,
+        gameStage: 'playing',
+        gamePlayed: { gameType: game, player: me },
+      })
+    }
   }
 
   return (
     <>
       <h1>{me.name}</h1>
       <p>{state.playersInGame.find((m) => state.currentPlayerId === m.id)?.name} ist am Zug</p>
-      <CardStack stack={state.stack}></CardStack>
+      {state.gameStage === 'choose-game' && (
+        <GameChooser
+          disabled={!isItMyTurn(state.currentPlayerId, me.id)}
+          onClick={(game) => updateGameType(state, game)}
+        ></GameChooser>
+      )}
+      {state.gameStage === 'playing' && (
+        <>
+          <p>
+            {state.gamePlayed?.player.name} spielt {state.gamePlayed?.gameType}
+          </p>
+          <CardStack stack={state.stack}></CardStack>
+        </>
+      )}
       <Hand
         players={state.playersInGame}
         currentPlayer={me}
@@ -49,6 +80,30 @@ export function Game({ me }: GameProps) {
         onClick={(card: Card) => onSubmitCard(state, card)}
       ></Hand>
     </>
+  )
+}
+
+interface GameChooserProps {
+  disabled: boolean
+  onClick: (game: string) => void
+}
+
+function GameChooser({ onClick, disabled }: GameChooserProps) {
+  return (
+    <ul css={{ display: 'flex' }}>
+      {games.map((game) => (
+        <li key={game}>
+          <button disabled={disabled} onClick={() => onClick(game)}>
+            {game}
+          </button>
+        </li>
+      ))}
+      <li>
+        <button disabled={disabled} onClick={() => onClick('weiter')}>
+          Weiter
+        </button>
+      </li>
+    </ul>
   )
 }
 
