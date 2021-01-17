@@ -1,7 +1,9 @@
-import { Card } from 'model/card'
 import { Player } from 'model/player'
 import React from 'react'
 import { GameState, useGameStore } from '../contexts/game-store-provider'
+import { Card } from './card'
+
+type Card = import('model/card').Card
 
 interface GameProps {
   me: Player
@@ -35,33 +37,36 @@ export function Game({ me }: GameProps) {
   }
 
   return (
-    <div>
-      <p>{me.name}</p>
-      <p>Stack: {state.stack.map((card) => `${card.icon}-${card.name}`)}</p>
-      <p>Aktueller Spieler: {players.find((m) => state.currentPlayerId === m.id)?.name}</p>
-      <ul>
+    <>
+      <h1>{me.name}</h1>
+      <p>{players.find((m) => state.currentPlayerId === m.id)?.name} ist am Zug</p>
+      <h2>Stapel</h2>
+      <ol css={{ display: 'flex', flexWrap: 'wrap' }}>
+        {state.stack.map((card) => (
+          <li key={card.id}>
+            <Card card={card} />
+          </li>
+        ))}
+      </ol>
+      <h2>Karten auf der Hand</h2>
+      <ul css={{ display: 'flex', flexWrap: 'wrap' }}>
         {state.playersInGame
           .find((player) => player.id === me.id)
           ?.cards.map((card) => {
             return (
-              <li key={`${card.icon}-${card.name}`}>
+              <li key={card.id}>
                 <button
+                  css={{ background: 'none', border: 'none' }}
                   disabled={!isItMyTurn(state.currentPlayerId, me.id)}
-                  onClick={() => {
-                    const clickedCard = {
-                      name: card.name,
-                      icon: card.icon,
-                    }
-                    onSubmitCard(state, clickedCard)
-                  }}
+                  onClick={() => onSubmitCard(state, card)}
                 >
-                  {card.icon}-{card.name}
+                  <Card card={card} />
                 </button>
               </li>
             )
           })}
       </ul>
-    </div>
+    </>
   )
 }
 
