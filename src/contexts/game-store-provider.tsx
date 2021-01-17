@@ -1,12 +1,14 @@
 import { useClientTrigger, useEvent } from '@harelpls/use-pusher'
-import { Player } from 'model/player'
+import { Card } from 'model/card'
+import { Player, PlayerInGame } from 'model/player'
 import { getPlayersFromMembers } from 'model/pusher-members'
 import { PresenceChannel } from 'pusher-js'
 import React from 'react'
 
 export interface GameState {
-  count: number
   currentPlayerId: string
+  playersInGame: PlayerInGame[]
+  stack: Card[]
 }
 
 interface GameStore {

@@ -1,11 +1,23 @@
 import { useGameStore } from 'contexts/game-store-provider'
+import { shuffleCards } from 'model/card'
 import { Player } from 'model/player'
 
 export function Lobby({ roomId, me }: { roomId: string; me: Player }) {
   const { trigger, players } = useGameStore()
 
   function onStartGame() {
-    trigger({ count: 0, currentPlayerId: players[0].id })
+    const mixedCards = shuffleCards()
+    const playersWithCards = players.map((player, index) => {
+      const cardsForPlayer = mixedCards.filter(
+        (_, cardIndex) => cardIndex % players.length === index,
+      )
+      return { ...player, cards: cardsForPlayer }
+    })
+    trigger({
+      currentPlayerId: players[0].id,
+      playersInGame: playersWithCards,
+      stack: [],
+    })
   }
 
   return (
