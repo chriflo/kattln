@@ -9,6 +9,7 @@ export interface GameState {
   currentPlayerId: string
   playersInGame: PlayerInGame[]
   stack: Card[]
+  order: string[]
 }
 
 interface GameStore {

@@ -17,6 +17,7 @@ export function Lobby({ roomId, me }: { roomId: string; me: Player }) {
       currentPlayerId: players[0].id,
       playersInGame: playersWithCards,
       stack: [],
+      order: players.map((p) => p.id),
     })
   }
 

@@ -10,8 +10,8 @@ interface GameProps {
 }
 
 export function Game({ me }: GameProps) {
-  const { state, trigger, players } = useGameStore()
-  if (!state || players.length < 1) throw Error('Invalid state in game')
+  const { state, trigger } = useGameStore()
+  if (!state) throw Error('Invalid state in game')
 
   function onSubmitCard(currentState: GameState, playedCard: Card) {
     if (!isItMyTurn(currentState.currentPlayerId, me.id)) return
@@ -30,16 +30,17 @@ export function Game({ me }: GameProps) {
     })
 
     trigger({
-      currentPlayerId: players[findNextPlayerIndex(players, currentState)].id,
+      currentPlayerId: currentState.order[findNextPlayerIndex(currentState)],
       playersInGame: updatedPlayers,
       stack: [playedCard, ...(currentState?.stack ?? [])],
+      order: currentState.order,
     })
   }
 
   return (
     <>
       <h1>{me.name}</h1>
-      <p>{players.find((m) => state.currentPlayerId === m.id)?.name} ist am Zug</p>
+      <p>{state.playersInGame.find((m) => state.currentPlayerId === m.id)?.name} ist am Zug</p>
       <h2>Stapel</h2>
       <ol css={{ display: 'flex', flexWrap: 'wrap' }}>
         {state.stack.map((card) => (
@@ -70,9 +71,9 @@ export function Game({ me }: GameProps) {
   )
 }
 
-function findNextPlayerIndex(players: Player[], state: GameState) {
-  const currentPlayerIndex = players.findIndex((member) => state.currentPlayerId === member.id)
-  return currentPlayerIndex < players.length - 1 ? currentPlayerIndex + 1 : 0
+function findNextPlayerIndex(state: GameState) {
+  const currentPlayerIndex = state.order.findIndex((id) => state.currentPlayerId === id)
+  return currentPlayerIndex < state.order.length - 1 ? currentPlayerIndex + 1 : 0
 }
 
 function isItMyTurn(currentPlayerId: string, myId: string): boolean {
