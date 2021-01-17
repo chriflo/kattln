@@ -1,4 +1,4 @@
-import { Player } from 'model/player'
+import { Player, PlayerInGame } from 'model/player'
 import React from 'react'
 import { GameState, useGameStore } from '../contexts/game-store-provider'
 import { Card } from './card'
@@ -41,25 +41,57 @@ export function Game({ me }: GameProps) {
     <>
       <h1>{me.name}</h1>
       <p>{state.playersInGame.find((m) => state.currentPlayerId === m.id)?.name} ist am Zug</p>
+      <CardStack stack={state.stack}></CardStack>
+      <Hand
+        players={state.playersInGame}
+        currentPlayer={me}
+        disabled={!isItMyTurn(state.currentPlayerId, me.id)}
+        onClick={(card: Card) => onSubmitCard(state, card)}
+      ></Hand>
+    </>
+  )
+}
+
+interface CardStackProps {
+  stack: Card[]
+}
+
+function CardStack({ stack }: CardStackProps) {
+  return (
+    <>
       <h2>Stapel</h2>
       <ol css={{ display: 'flex', flexWrap: 'wrap' }}>
-        {state.stack.map((card) => (
+        {stack.map((card) => (
           <li key={card.id}>
             <Card card={card} />
           </li>
         ))}
       </ol>
+    </>
+  )
+}
+
+interface HandProps {
+  players: PlayerInGame[]
+  currentPlayer: Player
+  disabled: boolean
+  onClick: (card: Card) => void
+}
+
+function Hand({ players, currentPlayer, disabled, onClick }: HandProps) {
+  return (
+    <>
       <h2>Karten auf der Hand</h2>
       <ul css={{ display: 'flex', flexWrap: 'wrap' }}>
-        {state.playersInGame
-          .find((player) => player.id === me.id)
+        {players
+          .find((player) => player.id === currentPlayer.id)
           ?.cards.map((card) => {
             return (
               <li key={card.id}>
                 <button
                   css={{ background: 'none', border: 'none' }}
-                  disabled={!isItMyTurn(state.currentPlayerId, me.id)}
-                  onClick={() => onSubmitCard(state, card)}
+                  disabled={disabled}
+                  onClick={() => onClick(card)}
                 >
                   <Card card={card} />
                 </button>
