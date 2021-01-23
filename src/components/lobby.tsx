@@ -5,7 +5,9 @@ import { Player } from 'model/player'
 
 export function Lobby({ roomId, me }: { roomId: string; me: Player }) {
   const { trigger, players } = useGameStore()
-  const [current, send] = useMachine(gameMachine)
+  const [state, send] = useMachine(gameMachine)
+
+  const playersInGameCount = state.context.playersInGame.length
 
   function onStartGame() {
     const mixedCards = shuffleCards()
@@ -28,7 +30,7 @@ export function Lobby({ roomId, me }: { roomId: string; me: Player }) {
     <>
       <h1>Runde - {roomId}</h1>
       <p>
-        Hi {me.name}! Es sind {players.length} Spieler am Tisch:
+        Hi {me.name}! Es sind {playersInGameCount} Spieler am Tisch:
       </p>
       <ul>
         {players.map(({ id, name }) => (
@@ -37,7 +39,11 @@ export function Lobby({ roomId, me }: { roomId: string; me: Player }) {
           </li>
         ))}
       </ul>
-      <button onClick={onStartGame}>Start game</button>
+
+      {playersInGameCount !== 4 && <p>Um ein Spiel zu starten müsst ihr zu viert sein</p>}
+      <button disabled={playersInGameCount !== 4} onClick={onStartGame}>
+        Start game
+      </button>
     </>
   )
 }

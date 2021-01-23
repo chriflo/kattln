@@ -1,7 +1,7 @@
 import { Members } from 'pusher-js'
 import { Player } from './player'
 
-interface PusherMember {
+export interface PusherMember {
   id: string
   info: {
     name: string

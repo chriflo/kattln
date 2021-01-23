@@ -70,6 +70,7 @@ type GameEvent =
       stack: Card[]
       order: string[]
     }
+  | { type: 'ADD_PLAYER'; player: PlayerInGame }
   | {
       type: 'START_PLAYING'
     }
@@ -98,11 +99,26 @@ export const gameMachine = Machine<GameContext, GameStateSchema, GameEvent>(
     initial: 'lobby',
     states: {
       lobby: {
+        entry: (context, event) => {
+          console.log('ENTRY', { context, event })
+        },
+        exit: (context, event) => {
+          console.log('EXIT', { context, event })
+        },
         on: {
           START_BIDDING: {
             target: 'bidding',
             actions: ['initializeGame'],
             cond: fourPlayersInGame,
+          },
+          ADD_PLAYER: {
+            target: 'lobby',
+            actions: assign((context: GameContext, event) => {
+              return {
+                // increment the current count by the event value
+                playersInGame: [...context.playersInGame, event.player],
+              }
+            }),
           },
         },
       },
@@ -123,6 +139,20 @@ export const gameMachine = Machine<GameContext, GameStateSchema, GameEvent>(
         if (event.type === 'START_BIDDING') {
           const { currentPlayerId, order, playersInGame, stack } = event
           assign({ currentPlayerId, order, playersInGame, stack })
+        }
+      },
+      addPlayer: (context, event) => {
+        console.log(context)
+        console.log(event)
+        if (event.type === 'ADD_PLAYER') {
+          console.log('add player')
+
+          assign({
+            playersInGame: (playersInGameContext: GameContext) => [
+              ...playersInGameContext.playersInGame,
+              event.player,
+            ],
+          })
         }
       },
     },
