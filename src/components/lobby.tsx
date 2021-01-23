@@ -1,9 +1,11 @@
-import { useGameStore } from 'contexts/game-store-provider'
+import { useMachine } from '@xstate/react'
+import { gameMachine, useGameStore } from 'contexts/game-store-provider'
 import { shuffleCards } from 'model/card'
 import { Player } from 'model/player'
 
 export function Lobby({ roomId, me }: { roomId: string; me: Player }) {
   const { trigger, players } = useGameStore()
+  const [current, send] = useMachine(gameMachine)
 
   function onStartGame() {
     const mixedCards = shuffleCards()
@@ -13,12 +15,12 @@ export function Lobby({ roomId, me }: { roomId: string; me: Player }) {
       )
       return { ...player, cards: cardsForPlayer }
     })
-    trigger({
+    send({
+      type: 'START_BIDDING',
       currentPlayerId: players[0].id,
       playersInGame: playersWithCards,
       stack: [],
       order: players.map((p) => p.id),
-      gameStage: 'choose-game',
     })
   }
 
