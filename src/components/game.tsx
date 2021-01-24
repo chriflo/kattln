@@ -1,111 +1,98 @@
-import { games } from 'model/game'
-import { Player, PlayerInGame } from 'model/player'
+import { GameContext, GameEvent } from 'machines/game-machine'
+import { Player } from 'model/player'
 import React from 'react'
-import { GameState, useGameStore } from '../contexts/game-store-provider'
+import { Sender, State } from 'xstate'
 import { Card } from './card'
 
 type Card = import('model/card').Card
 
 interface GameProps {
   me: Player
+  state: State<GameContext, GameEvent>
+  send: Sender<GameEvent>
 }
 
-export function Game({ me }: GameProps) {
-  const { state, trigger } = useGameStore()
-  if (!state) throw Error('Invalid state in game')
-
-  function onSubmitCard(currentState: GameState, playedCard: Card) {
-    if (!isItMyTurn(currentState.currentPlayerId, me.id)) return
-
-    const updatedPlayers = currentState.playersInGame.map((player) => {
-      if (player.id === me.id) {
-        return {
-          ...player,
-          cards: player.cards.filter(
-            (c) => !(c.icon === playedCard.icon && c.name === playedCard.name),
-          ),
-        }
-      } else {
-        return player
-      }
-    })
-
-    trigger({
-      ...currentState,
-      currentPlayerId: currentState.order[findNextPlayerIndex(currentState)],
-      playersInGame: updatedPlayers,
-      stack: [playedCard, ...(currentState?.stack ?? [])],
+export function Game({ me, state, send }: GameProps) {
+  const { currentPlayerId, stack, players } = state.context
+  function onSubmitCard(playedCard: Card) {
+    console.log(currentPlayerId, me.id)
+    if (currentPlayerId !== me.id) return
+    console.log(me.id, playedCard)
+    send({
+      type: 'PLAY_CARD',
+      card: playedCard,
+      triggerId: me.id,
     })
   }
 
-  function updateGameType(currentState: GameState, game: string) {
-    if (!isItMyTurn(currentState.currentPlayerId, me.id)) return
+  // function updateGameType(currentState: GameState, game: string) {
+  //   if (!isItMyTurn(currentState.currentPlayerId, me.id)) return
 
-    if (game === 'weiter') {
-      trigger({
-        ...currentState,
-        currentPlayerId: currentState.order[findNextPlayerIndex(currentState)],
-      })
-    } else {
-      trigger({
-        ...currentState,
-        gameStage: 'playing',
-        gamePlayed: { gameType: game, player: me },
-      })
-    }
-  }
+  //   if (game === 'weiter') {
+  //     trigger({
+  //       ...currentState,
+  //       currentPlayerId: currentState.order[findNextPlayerIndex(currentState)],
+  //     })
+  //   } else {
+  //     trigger({
+  //       ...currentState,
+  //       gameStage: 'playing',
+  //       gamePlayed: { gameType: game, player: me },
+  //     })
+  //   }
+  // }
 
   return (
     <>
       <h1>{me.name}</h1>
-      <p>{state.playersInGame.find((m) => state.currentPlayerId === m.id)?.name} ist am Zug</p>
-      {state.gameStage === 'choose-game' && (
+      <p>{players.find((m) => currentPlayerId === m.id)?.name} ist am Zug</p>
+      {/* {gameStage === 'choose-game' && (
         <GameChooser
-          disabled={!isItMyTurn(state.currentPlayerId, me.id)}
+          disabled={!isItMyTurn(currentPlayerId, me.id)}
           onClick={(game) => updateGameType(state, game)}
         ></GameChooser>
       )}
-      {state.gameStage === 'playing' && (
-        <>
-          <p>
-            {state.gamePlayed?.player.name} spielt {state.gamePlayed?.gameType}
-          </p>
-          <CardStack stack={state.stack}></CardStack>
-        </>
-      )}
+      {gameStage === 'playing' && (
+      <>
+      <p>
+        {gamePlayed?.player.name} spielt {gamePlayed?.gameType}
+      </p> */}
+      <CardStack stack={stack}></CardStack>
+      {/* </>
+      )} */}
       <Hand
-        players={state.playersInGame}
+        players={players}
         currentPlayer={me}
-        disabled={!isItMyTurn(state.currentPlayerId, me.id)}
-        onClick={(card: Card) => onSubmitCard(state, card)}
+        disabled={!isItMyTurn(currentPlayerId, me.id)}
+        onClick={(card: Card) => onSubmitCard(card)}
       ></Hand>
     </>
   )
 }
 
-interface GameChooserProps {
-  disabled: boolean
-  onClick: (game: string) => void
-}
+// interface GameChooserProps {
+//   disabled: boolean
+//   onClick: (game: string) => void
+// }
 
-function GameChooser({ onClick, disabled }: GameChooserProps) {
-  return (
-    <ul css={{ display: 'flex' }}>
-      {games.map((game) => (
-        <li key={game}>
-          <button disabled={disabled} onClick={() => onClick(game)}>
-            {game}
-          </button>
-        </li>
-      ))}
-      <li>
-        <button disabled={disabled} onClick={() => onClick('weiter')}>
-          Weiter
-        </button>
-      </li>
-    </ul>
-  )
-}
+// function GameChooser({ onClick, disabled }: GameChooserProps) {
+//   return (
+//     <ul css={{ display: 'flex' }}>
+//       {games.map((game) => (
+//         <li key={game}>
+//           <button disabled={disabled} onClick={() => onClick(game)}>
+//             {game}
+//           </button>
+//         </li>
+//       ))}
+//       <li>
+//         <button disabled={disabled} onClick={() => onClick('weiter')}>
+//           Weiter
+//         </button>
+//       </li>
+//     </ul>
+//   )
+// }
 
 interface CardStackProps {
   stack: Card[]
@@ -127,7 +114,7 @@ function CardStack({ stack }: CardStackProps) {
 }
 
 interface HandProps {
-  players: PlayerInGame[]
+  players: Player[]
   currentPlayer: Player
   disabled: boolean
   onClick: (card: Card) => void
@@ -140,7 +127,7 @@ function Hand({ players, currentPlayer, disabled, onClick }: HandProps) {
       <ul css={{ display: 'flex', flexWrap: 'wrap' }}>
         {players
           .find((player) => player.id === currentPlayer.id)
-          ?.cards.map((card) => {
+          ?.cards?.map((card) => {
             return (
               <li key={card.id}>
                 <button
@@ -156,11 +143,6 @@ function Hand({ players, currentPlayer, disabled, onClick }: HandProps) {
       </ul>
     </>
   )
-}
-
-function findNextPlayerIndex(state: GameState) {
-  const currentPlayerIndex = state.order.findIndex((id) => state.currentPlayerId === id)
-  return currentPlayerIndex < state.order.length - 1 ? currentPlayerIndex + 1 : 0
 }
 
 function isItMyTurn(currentPlayerId: string, myId: string): boolean {

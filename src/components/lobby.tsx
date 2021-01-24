@@ -1,14 +1,20 @@
-import { useMachine } from '@xstate/react'
-import { gameMachine, useGameStore } from 'contexts/game-store-provider'
+import { GameContext, GameEvent } from 'machines/game-machine'
 import { shuffleCards } from 'model/card'
 import { Player } from 'model/player'
+import { Sender, State } from 'xstate'
 
-export function Lobby({ roomId, me }: { roomId: string; me: Player }) {
-  const { trigger, players } = useGameStore()
-  const [state, send] = useMachine(gameMachine)
-
-  const playersInGameCount = state.context.playersInGame.length
-
+export function Lobby({
+  roomId,
+  me,
+  state,
+  send,
+}: {
+  roomId: string
+  me: Player
+  state: State<GameContext, GameEvent>
+  send: Sender<GameEvent>
+}) {
+  const players = state.context?.players ?? []
   function onStartGame() {
     const mixedCards = shuffleCards()
     const playersWithCards = players.map((player, index) => {
@@ -17,12 +23,14 @@ export function Lobby({ roomId, me }: { roomId: string; me: Player }) {
       )
       return { ...player, cards: cardsForPlayer }
     })
+
     send({
       type: 'START_BIDDING',
       currentPlayerId: players[0].id,
-      playersInGame: playersWithCards,
+      players: playersWithCards,
       stack: [],
       order: players.map((p) => p.id),
+      triggerId: me.id,
     })
   }
 
@@ -30,7 +38,7 @@ export function Lobby({ roomId, me }: { roomId: string; me: Player }) {
     <>
       <h1>Runde - {roomId}</h1>
       <p>
-        Hi {me.name}! Es sind {playersInGameCount} Spieler am Tisch:
+        Hi {me.name}! Es sind {players.length} Spieler am Tisch:
       </p>
       <ul>
         {players.map(({ id, name }) => (
@@ -39,9 +47,8 @@ export function Lobby({ roomId, me }: { roomId: string; me: Player }) {
           </li>
         ))}
       </ul>
-
-      {playersInGameCount !== 4 && <p>Um ein Spiel zu starten müsst ihr zu viert sein</p>}
-      <button disabled={playersInGameCount !== 4} onClick={onStartGame}>
+      {players.length !== 4 && <p>Um ein Spiel zu starten müsst ihr zu viert sein</p>}
+      <button disabled={players.length !== 4} onClick={onStartGame}>
         Start game
       </button>
     </>
