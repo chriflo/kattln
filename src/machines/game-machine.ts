@@ -72,13 +72,7 @@ export const gameMachine = Machine<GameContext, GameStateSchema, GameEvent>(
           START_PLAYING: 'playing',
           PLAY_CARD: {
             target: 'bidding',
-            actions: assign((context: GameContext, event) => {
-              return {
-                stack: [event.card],
-                currentPlayerId:
-                  context.order[findNextPlayerIndex(context.order, context.currentPlayerId)],
-              }
-            }),
+            actions: ['playCard'],
           },
         },
       },
@@ -94,17 +88,32 @@ export const gameMachine = Machine<GameContext, GameStateSchema, GameEvent>(
   },
   {
     actions: {
-      initializeGame: assign((c, e) => {
-        return {
-          currentPlayerId: e.type === 'START_BIDDING' ? e.currentPlayerId : c.currentPlayerId,
-          order: e.type === 'START_BIDDING' ? e.order : c.order,
-          players: e.type === 'START_BIDDING' ? e.players : c.players,
-          stack: e.type === 'START_BIDDING' ? e.stack : c.stack,
-        }
-      }),
-      updatePlayers: assign({
-        players: (_: GameContext, e: UpdatePlayersEvent) => e.players,
-      }),
+      initializeGame: assign((c, e) =>
+        e.type === 'START_BIDDING'
+          ? {
+              currentPlayerId: e.currentPlayerId,
+              order: e.order,
+              players: e.players,
+              stack: e.stack,
+            }
+          : c,
+      ),
+      updatePlayers: assign((c, e) =>
+        e.type === 'UPDATE_PLAYERS'
+          ? {
+              players: e.players,
+            }
+          : c,
+      ),
+      playCard: assign((c, e) =>
+        e.type === 'PLAY_CARD'
+          ? {
+              stack: [e.card, ...c.stack],
+              currentPlayerId: c.order[findNextPlayerIndex(c.order, c.currentPlayerId)],
+              players: removeCardFromHand(c.players, e.card, c.currentPlayerId),
+            }
+          : c,
+      ),
     },
     guards: {
       fourPlayersInGame,
@@ -119,4 +128,15 @@ function fourPlayersInGame(context: GameContext) {
 function findNextPlayerIndex(order: string[], currentPlayerId: string) {
   const currentPlayerIndex = order.findIndex((id) => currentPlayerId === id)
   return currentPlayerIndex < order.length - 1 ? currentPlayerIndex + 1 : 0
+}
+
+function removeCardFromHand(players: Player[], card: Card, currentPlayerId: string): Player[] {
+  const currentPlayer = players.find((p) => p.id === currentPlayerId)
+  if (!currentPlayer) return players
+  const updatedCards = currentPlayer?.cards?.filter((c) => c !== card)
+
+  return [
+    ...players.filter((p) => p.id !== currentPlayerId),
+    { ...currentPlayer, cards: updatedCards },
+  ]
 }
