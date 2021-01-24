@@ -16,15 +16,14 @@ type MyEvents =
       type: 'START_BIDDING'
       currentPlayerId: string
       players: Player[]
-      stack: Card[]
       order: string[]
     }
-  | {
-      type: 'START_PLAYING'
-    }
+  | { type: 'START_PLAYING' }
+  | { type: 'RESET_GAME' }
   | { type: 'FINISH_GAME' }
   | { type: 'START_AGAIN' }
   | { type: 'PLAY_CARD'; card: Card }
+  | { type: 'CHOOSE_GAME'; gamePlayed: { gameType: string; player: Player } | null }
 
 type TriggerEvents = { triggerId: string } & MyEvents
 
@@ -36,7 +35,7 @@ export interface GameContext {
   players: Player[]
   stack: Card[]
   order: string[]
-  gamePlayed?: { gameType: string; player: Player }
+  gamePlayed: { gameType: string; player: Player } | null
 }
 
 export type GameMachine = StateMachine<GameContext, GameStateSchema, GameEvent>
@@ -51,33 +50,38 @@ export const gameMachine = Machine<GameContext, GameStateSchema, GameEvent>(
       players: [],
       stack: [],
       order: [],
+      gamePlayed: null,
     },
     initial: 'lobby',
+    on: {
+      RESET_GAME: 'lobby',
+    },
     states: {
       lobby: {
         on: {
+          UPDATE_PLAYERS: {
+            target: 'lobby',
+            actions: ['updatePlayers'],
+          },
           START_BIDDING: {
             target: 'bidding',
             cond: fourPlayersInGame,
             actions: ['initializeGame'],
           },
-          UPDATE_PLAYERS: {
-            target: 'lobby',
-            actions: ['updatePlayers'],
-          },
         },
       },
       bidding: {
         on: {
-          START_PLAYING: 'playing',
-          PLAY_CARD: {
-            target: 'bidding',
-            actions: ['playCard'],
-          },
+          START_PLAYING: { target: 'playing', actions: ['startPlaying'] },
+          CHOOSE_GAME: { target: 'bidding', actions: ['chooseGame'] },
         },
       },
       playing: {
         on: {
+          PLAY_CARD: {
+            target: 'playing',
+            actions: ['playCard'],
+          },
           FINISH_GAME: 'evaluation',
         },
       },
@@ -94,7 +98,6 @@ export const gameMachine = Machine<GameContext, GameStateSchema, GameEvent>(
               currentPlayerId: e.currentPlayerId,
               order: e.order,
               players: e.players,
-              stack: e.stack,
             }
           : c,
       ),
@@ -114,6 +117,18 @@ export const gameMachine = Machine<GameContext, GameStateSchema, GameEvent>(
             }
           : c,
       ),
+      chooseGame: assign((c, e) =>
+        e.type === 'CHOOSE_GAME'
+          ? {
+              gamePlayed: e.gamePlayed,
+              currentPlayerId: c.order[findNextPlayerIndex(c.order, c.currentPlayerId)],
+            }
+          : c,
+      ),
+      startPlaying: assign({
+        order: (c) => c.players.map((p) => p.id),
+        currentPlayerId: (c) => c.players[0].id,
+      }),
     },
     guards: {
       fourPlayersInGame,

@@ -1,20 +1,16 @@
 import { GameContext, GameEvent } from 'machines/game-machine'
 import { shuffleCards } from 'model/card'
 import { Player } from 'model/player'
-import { Sender, State } from 'xstate'
+import { Sender } from 'xstate'
 
-export function Lobby({
-  roomId,
-  me,
-  state,
-  send,
-}: {
+interface LobbyProps {
   roomId: string
   me: Player
-  state: State<GameContext, GameEvent>
+  context: GameContext
   send: Sender<GameEvent>
-}) {
-  const players = state.context?.players ?? []
+}
+export function Lobby({ roomId, me, context, send }: LobbyProps) {
+  const players = context?.players ?? []
   function onStartGame() {
     const mixedCards = shuffleCards()
     const playersWithCards = players.map((player, index) => {
@@ -24,14 +20,14 @@ export function Lobby({
       return { ...player, cards: cardsForPlayer }
     })
 
-    send({
-      type: 'START_BIDDING',
-      currentPlayerId: players[0].id,
-      players: playersWithCards,
-      stack: [],
-      order: players.map((p) => p.id),
-      triggerId: me.id,
-    })
+    send &&
+      send({
+        type: 'START_BIDDING',
+        currentPlayerId: players[0].id,
+        players: playersWithCards,
+        order: players.map((p) => p.id),
+        triggerId: me.id,
+      })
   }
 
   return (
