@@ -120,10 +120,9 @@ export const gameMachine = Machine<GameContext, GameStateSchema, GameEvent>(
         e.type === 'PLAY_CARD'
           ? {
               stack: [...c.stack, e.card],
-              currentPlayerId:
-                c.stack.length === 3
-                  ? undefined
-                  : c.order[findNextPlayerIndex(c.order, c.currentPlayerId)],
+              currentPlayerId: isFourthCardBeyingPlayed(c.stack)
+                ? undefined
+                : c.order[findNextPlayerIndex(c.order, c.currentPlayerId)],
               players: removeCardFromHand(c.players, e.card, c.currentPlayerId),
             }
           : c,
@@ -196,4 +195,8 @@ function giveTrickToPlayer(players: Player[], playerId: string, trick: Trick): P
       tricks: updatedTricks,
     },
   ]
+}
+
+function isFourthCardBeyingPlayed(stack: Card[]) {
+  return stack.length === 3
 }
