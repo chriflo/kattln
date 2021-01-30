@@ -10,6 +10,13 @@ export const colors = {
   green: '#14281d',
 }
 
+export const fontSet = {
+  headline: css`
+    font-size: 20px;
+    letter-spacing: 1px;
+  `,
+}
+
 export function GlobalStyles() {
   return (
     <Global

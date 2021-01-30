@@ -33,9 +33,10 @@ export default function MyApp({ Component, pageProps }: { Component: any; pagePr
         <Header />
         <main
           css={{
+            height: '100%',
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'center',
+            justifyContent: 'flex-end',
             alignItems: 'center',
             flexGrow: 1,
           }}

@@ -8,7 +8,18 @@ export function RightArrowButton({ title, ...props }: ButtonProps) {
 }
 
 export function LeftArrowButton({ title, ...props }: ButtonProps) {
-  return <IconButton title={title} svgName="left-arrow" {...props} />
+  return (
+    <IconButton
+      title={title}
+      svgName="right-arrow"
+      css={css`
+        img {
+          transform: rotate(180deg);
+        }
+      `}
+      {...props}
+    />
+  )
 }
 
 export function GameboyButton({ title, ...props }: ButtonProps) {
@@ -21,7 +32,7 @@ export function IconButton({ title, svgName, ...props }: { title: string; svgNam
       <div css={styles.icon}>
         <img alt="" src={`/${svgName}.svg`} css={{ width: '80%', height: 'auto' }} />
       </div>
-      {title}
+      {title ? title : null}
     </button>
   )
 }

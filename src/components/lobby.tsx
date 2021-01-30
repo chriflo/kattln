@@ -1,7 +1,10 @@
 import { GameContext, GameEvent } from 'machines/game-machine'
 import { shuffleCards } from 'model/card'
 import { Player } from 'model/player'
+import { fontSet } from 'styles/global'
 import { Sender } from 'xstate'
+import { GameboyButton } from './buttons'
+import { SinglePlayer } from './single-player'
 
 interface LobbyProps {
   roomId: string
@@ -32,21 +35,24 @@ export function Lobby({ roomId, me, context, send }: LobbyProps) {
 
   return (
     <>
-      <h1>Runde - {roomId}</h1>
-      <p>
-        Hi {me.name}! Es sind {players.length} Spieler am Tisch:
-      </p>
-      <ul>
-        {players.map(({ id, name }) => (
-          <li key={id}>
-            {name}-{id}
-          </li>
-        ))}
+      <h1 css={[fontSet.headline, { marginTop: 20 }]}>Runde - {roomId}</h1>
+      <ul css={{ marginTop: 20, display: 'flex', width: '100%', justifyContent: 'space-around' }}>
+        {players
+          .filter((p) => p.id !== me.id)
+          .map(({ id, name }) => (
+            <SinglePlayer key={id} name={name} />
+          ))}
       </ul>
-      {players.length !== 4 && <p>Um ein Spiel zu starten müsst ihr zu viert sein</p>}
-      <button disabled={players.length !== 4} onClick={onStartGame}>
-        Start game
-      </button>
+      <GameboyButton
+        css={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}
+        title="Spiel starten"
+        disabled={players.length !== 4}
+        onClick={onStartGame}
+      />
+      <SinglePlayer css={{ margin: 20 }} name={me.name} />
+      {players.length !== 4 && (
+        <p css={{ margin: 20 }}>Um ein Spiel zu starten müsst ihr zu viert sein</p>
+      )}
     </>
   )
 }
