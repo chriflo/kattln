@@ -28,34 +28,37 @@ export function Bidding({ me, context, send }: BiddingProps) {
 
   return (
     <>
-      <h1>{me.name}</h1>
-      <p>{players.find((m) => currentPlayerId === m.id)?.name} ist am Zug</p>
       <GameChooser
         isItMyTurn={isItMyTurn(currentPlayerId, me.id)}
-        onClick={(game) => updateGameType(game)}
+        onChooseGame={(game) => updateGameType(game)}
+        css={{ flexGrow: 1 }}
       />
-      <Hand players={players} currentPlayer={me} />
+      {/* eslint-disable-next-line @typescript-eslint/no-empty-function */}
+      <Hand players={players} currentPlayer={me} onClickCard={() => {}} />
     </>
   )
 }
 
-interface GameChooserProps {
+interface GameChooserProps extends React.ComponentProps<'ul'> {
   isItMyTurn: boolean
-  onClick: (game: string) => void
+  onChooseGame: (game: string) => void
 }
 
-function GameChooser({ onClick, isItMyTurn }: GameChooserProps) {
+function GameChooser({ onChooseGame, isItMyTurn, ...props }: GameChooserProps) {
   return (
-    <ul css={{ display: 'flex' }}>
+    <ul
+      css={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center' }}
+      {...props}
+    >
       {games.map((game) => (
         <li key={game}>
-          <button disabled={!isItMyTurn} onClick={() => onClick(game)}>
+          <button disabled={!isItMyTurn} onClick={() => onChooseGame(game)}>
             {game}
           </button>
         </li>
       ))}
       <li>
-        <button disabled={!isItMyTurn} onClick={() => onClick('weiter')}>
+        <button disabled={!isItMyTurn} onClick={() => onChooseGame('weiter')}>
           Weiter
         </button>
       </li>

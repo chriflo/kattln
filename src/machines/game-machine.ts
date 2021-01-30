@@ -111,7 +111,7 @@ export const gameMachine = Machine<GameContext, GameStateSchema, GameEvent>(
       playCard: assign((c, e) =>
         e.type === 'PLAY_CARD'
           ? {
-              stack: [e.card, ...c.stack],
+              stack: [...c.stack, e.card],
               currentPlayerId: c.order[findNextPlayerIndex(c.order, c.currentPlayerId)],
               players: removeCardFromHand(c.players, e.card, c.currentPlayerId),
             }

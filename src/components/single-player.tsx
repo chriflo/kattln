@@ -2,13 +2,21 @@ import React from 'react'
 import { css } from '@emotion/react'
 import { colors } from 'styles/global'
 
-export function SinglePlayer({ name, ...props }: { name: string }) {
+export function SinglePlayer({
+  name,
+  highlighted,
+  ...props
+}: {
+  name: string
+  highlighted: boolean
+}) {
   return (
     <div
       css={css`
         display: flex;
         flex-direction: column;
         align-items: center;
+        transform: scale(${highlighted ? 1.5 : 1});
       `}
       {...props}
     >
@@ -17,7 +25,9 @@ export function SinglePlayer({ name, ...props }: { name: string }) {
         css={css`
           display: flex;
           justify-content: center;
-          background: ${colors.mint};
+          padding: 4px;
+          background: ${highlighted ? colors.green : colors.mint};
+          color: ${highlighted ? colors.mint : colors.green};
         `}
         key={name}
       >

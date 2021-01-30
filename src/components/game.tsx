@@ -1,3 +1,4 @@
+import { css } from '@emotion/react'
 import { GameContext, GameEvent } from 'machines/game-machine'
 import { Player } from 'model/player'
 import React from 'react'
@@ -29,14 +30,22 @@ export function Game({ me, context, send }: GameProps) {
 
   return (
     <>
-      <h1>{me.name}</h1>
-      <p>{players.find((m) => currentPlayerId === m.id)?.name} ist am Zug</p>
-      <CardStack stack={stack} />
+      <CardStack
+        css={css`
+          height: 100%;
+          width: 100%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          flex-grow: 1;
+        `}
+        stack={stack}
+      />
       <Hand
         players={players}
         currentPlayer={me}
         isItMyTurn={isItMyTurn(currentPlayerId, me.id)}
-        onClick={(card: Card) => onSubmitCard(card)}
+        onClickCard={(card: Card) => onSubmitCard(card)}
       />
     </>
   )

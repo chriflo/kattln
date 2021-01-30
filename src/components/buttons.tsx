@@ -1,7 +1,7 @@
 import { css } from '@emotion/react'
 import { colors } from 'styles/global'
 
-type ButtonProps = { title: string } & React.ButtonHTMLAttributes<HTMLButtonElement>
+type ButtonProps = { title?: string } & React.ButtonHTMLAttributes<HTMLButtonElement>
 
 export function RightArrowButton({ title, ...props }: ButtonProps) {
   return <IconButton title={title} svgName="right-arrow" {...props} />
@@ -26,7 +26,7 @@ export function GameboyButton({ title, ...props }: ButtonProps) {
   return <IconButton title={title} svgName="game-boy" {...props} />
 }
 
-export function IconButton({ title, svgName, ...props }: { title: string; svgName: string }) {
+export function IconButton({ title, svgName, ...props }: { title?: string; svgName: string }) {
   return (
     <button css={styles.button} title={title} {...props}>
       <div css={styles.icon}>

@@ -6,7 +6,9 @@ import { EichelIcon, BlattIcon, HerzIcon, SchelleIcon } from './card-icons'
 
 type Card = import('model/card').Card
 
-interface CardProps extends React.ComponentProps<'figure'> {
+export const cardHeight = 150
+
+interface CardProps extends React.ComponentProps<'button'> {
   card: Card
 }
 
@@ -18,10 +20,15 @@ export const Card = ({ card, ...props }: CardProps) => {
     name: card.name,
   }
   return (
-    <figure css={cardStyles} {...props}>
-      <HalfCard {...nameAndIcon} css={{ top: '3%', left: '6%' }} />
-      <HalfCard {...nameAndIcon} css={{ bottom: '3%', right: '6%', transform: 'rotate(180deg)' }} />
-    </figure>
+    <button css={{ border: 'none', background: 'none', padding: 0 }} {...props}>
+      <figure css={cardStyles}>
+        <HalfCard {...nameAndIcon} css={{ top: '3%', left: '6%' }} />
+        <HalfCard
+          {...nameAndIcon}
+          css={{ bottom: '3%', right: '6%', transform: 'rotate(180deg)' }}
+        />
+      </figure>
+    </button>
   )
 }
 
@@ -57,12 +64,13 @@ function getIconComponent(icon: Icon) {
 }
 
 const cardStyles = css`
-  width: 75px;
-  height: 150px;
+  width: ${cardHeight / 2}px;
+  height: ${cardHeight}px;
   border: 2px solid black;
   border-radius: 5px;
   position: relative;
   background: white;
+
   &::after {
     content: '';
     width: 100%;

@@ -3,21 +3,21 @@ import { Card } from './card'
 
 type Card = import('model/card').Card
 
-interface CardStackProps {
+interface CardStackProps extends React.ComponentProps<'ol'> {
   stack: Card[]
 }
 
-export function CardStack({ stack }: CardStackProps) {
+export function CardStack({ stack, ...props }: CardStackProps) {
   return (
-    <>
-      <h2>Stapel</h2>
-      <ol css={{ display: 'flex', flexWrap: 'wrap' }}>
-        {stack.map((card) => (
-          <li key={card.id}>
-            <Card card={card} />
-          </li>
-        ))}
-      </ol>
-    </>
+    <ol css={{ position: 'relative' }} {...props}>
+      {stack.map((card, i) => (
+        <li
+          css={{ position: 'absolute', zIndex: i, transform: `rotate(${45 * i}deg)` }}
+          key={card.id}
+        >
+          <Card card={card} />
+        </li>
+      ))}
+    </ol>
   )
 }
