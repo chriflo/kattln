@@ -55,6 +55,7 @@ function StackedCards({
     onClickCard,
   }
 
+  if (cards.length === 0) return <></>
   if (cards.length === 1) return <ClickableCard {...cardProps} />
 
   return (
