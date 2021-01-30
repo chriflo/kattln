@@ -1,5 +1,6 @@
 import { Card } from 'model/card'
 import { Player } from 'model/player'
+import { Trick } from 'model/trick'
 import { assign, Machine, StateMachine } from 'xstate'
 
 interface GameStateSchema {
@@ -23,6 +24,7 @@ type MyEvents =
   | { type: 'FINISH_GAME' }
   | { type: 'START_AGAIN' }
   | { type: 'PLAY_CARD'; card: Card }
+  | { type: 'TAKE_TRICK'; trick: Trick; player: Player }
   | { type: 'CHOOSE_GAME'; gamePlayed: { gameType: string; player: Player } | null }
 
 type TriggerEvents = { triggerId: string } & MyEvents
@@ -81,8 +83,14 @@ export const gameMachine = Machine<GameContext, GameStateSchema, GameEvent>(
           PLAY_CARD: {
             target: 'playing',
             actions: ['playCard'],
+            cond: lessThanFourCardsPlayed,
           },
           FINISH_GAME: 'evaluation',
+          TAKE_TRICK: {
+            target: 'playing',
+            actions: ['takeTrick'],
+            cond: fourCardsPlayed,
+          },
         },
       },
       evaluation: {
@@ -112,7 +120,10 @@ export const gameMachine = Machine<GameContext, GameStateSchema, GameEvent>(
         e.type === 'PLAY_CARD'
           ? {
               stack: [...c.stack, e.card],
-              currentPlayerId: c.order[findNextPlayerIndex(c.order, c.currentPlayerId)],
+              currentPlayerId:
+                c.stack.length === 3
+                  ? undefined
+                  : c.order[findNextPlayerIndex(c.order, c.currentPlayerId)],
               players: removeCardFromHand(c.players, e.card, c.currentPlayerId),
             }
           : c,
@@ -129,6 +140,15 @@ export const gameMachine = Machine<GameContext, GameStateSchema, GameEvent>(
         order: (c) => c.players.map((p) => p.id),
         currentPlayerId: (c) => c.players[0].id,
       }),
+      takeTrick: assign((c, e) =>
+        e.type === 'TAKE_TRICK'
+          ? {
+              stack: [],
+              currentPlayerId: e.player.id,
+              players: giveTrickToPlayer(c.players, e.player.id, e.trick),
+            }
+          : c,
+      ),
     },
     guards: {
       fourPlayersInGame,
@@ -153,5 +173,27 @@ function removeCardFromHand(players: Player[], card: Card, currentPlayerId: stri
   return [
     ...players.filter((p) => p.id !== currentPlayerId),
     { ...currentPlayer, cards: updatedCards },
+  ]
+}
+
+function fourCardsPlayed(context: GameContext) {
+  return context.stack.length === 4
+}
+
+function lessThanFourCardsPlayed(context: GameContext) {
+  return context.stack.length < 4
+}
+
+function giveTrickToPlayer(players: Player[], playerId: string, trick: Trick): Player[] {
+  const takingPlayer = players.find((p) => p.id === playerId)
+  if (!takingPlayer) return players
+  const updatedTricks = takingPlayer.tricks ? takingPlayer.tricks.concat([trick]) : [trick]
+
+  return [
+    ...players.filter((p) => p.id !== playerId),
+    {
+      ...takingPlayer,
+      tricks: updatedTricks,
+    },
   ]
 }

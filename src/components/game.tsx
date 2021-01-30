@@ -28,6 +28,15 @@ export function Game({ me, context, send }: GameProps) {
     })
   }
 
+  function onTakeTrick() {
+    send({
+      type: 'TAKE_TRICK',
+      trick: stack,
+      player: me,
+      triggerId: me.id,
+    })
+  }
+
   return (
     <>
       <CardStack
@@ -47,6 +56,9 @@ export function Game({ me, context, send }: GameProps) {
         isItMyTurn={isItMyTurn(currentPlayerId, me.id)}
         onClickCard={(card: Card) => onSubmitCard(card)}
       />
+      <button disabled={context.stack.length < 4} onClick={() => onTakeTrick()}>
+        Stich nehmen
+      </button>
     </>
   )
 }
