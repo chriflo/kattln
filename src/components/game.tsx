@@ -66,13 +66,17 @@ export function Game({ me, context, send }: GameProps) {
       <button disabled={context.stack.length < 4} onClick={() => onTakeTrick()}>
         Stich nehmen
       </button>
-      {context.players.every((player) => player.cards?.length === 0) && (
-        <button onClick={() => onFinishGame()}>Runde beenden</button>
-      )}
+      {countTricks(context) === 8 && <button onClick={() => onFinishGame()}>Runde beenden</button>}
     </>
   )
 }
 
 function isItMyTurn(currentPlayerId: string, myId: string): boolean {
   return currentPlayerId === myId
+}
+
+function countTricks(context: GameContext) {
+  return context.players.reduce((prevCount, curPlayer) => {
+    return curPlayer.tricks ? curPlayer.tricks.length + prevCount : 0
+  }, 0)
 }

@@ -105,7 +105,9 @@ export const gameMachine = Machine<GameContext, GameStateSchema, GameEvent>(
           ? {
               currentPlayerId: e.currentPlayerId,
               order: e.order,
-              players: e.players,
+              players: e.players.map((player) => {
+                return { ...player, tricks: [] }
+              }),
             }
           : c,
       ),
@@ -148,6 +150,7 @@ export const gameMachine = Machine<GameContext, GameStateSchema, GameEvent>(
             }
           : c,
       ),
+      resetGame: assign((c, e) => (e.type === 'START_AGAIN' ? c : c)),
     },
     guards: {
       fourPlayersInGame,

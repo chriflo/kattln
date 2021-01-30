@@ -2,6 +2,7 @@ import { css } from '@emotion/react'
 import { useMachine } from '@xstate/react'
 import { Bidding } from 'components/bidding'
 import { LeftArrowButton } from 'components/buttons'
+import { Evaluation } from 'components/evaluation'
 import { Game } from 'components/game'
 import { Lobby } from 'components/lobby'
 import { SinglePlayer } from 'components/single-player'
@@ -44,6 +45,9 @@ function GameMachine({ roomId, send, me, state }: GameMachineProps) {
       {state.matches('bidding') ? <Bidding context={state.context} me={me} send={send} /> : null}
       {state.matches('playing') ? <Game context={state.context} me={me} send={send} /> : null}
       {state.matches('lobby') ? <Lobby context={state.context} me={me} send={send} /> : null}
+      {state.matches('evaluation') ? (
+        <Evaluation context={state.context} me={me} send={send} />
+      ) : null}
       <SinglePlayer
         css={{ margin: 20 }}
         name={me.name}
