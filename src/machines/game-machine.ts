@@ -167,7 +167,7 @@ function findNextPlayerIndex(order: string[], currentPlayerId: string) {
 function removeCardFromHand(players: Player[], card: Card, currentPlayerId: string): Player[] {
   const currentPlayer = players.find((p) => p.id === currentPlayerId)
   if (!currentPlayer) return players
-  const updatedCards = currentPlayer?.cards?.filter((c) => c !== card)
+  const updatedCards = currentPlayer?.cards?.filter((c) => c.id !== card.id)
 
   return [
     ...players.filter((p) => p.id !== currentPlayerId),

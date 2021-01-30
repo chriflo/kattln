@@ -37,6 +37,13 @@ export function Game({ me, context, send }: GameProps) {
     })
   }
 
+  function onFinishGame() {
+    send({
+      type: 'FINISH_GAME',
+      triggerId: me.id,
+    })
+  }
+
   return (
     <>
       <CardStack
@@ -59,6 +66,9 @@ export function Game({ me, context, send }: GameProps) {
       <button disabled={context.stack.length < 4} onClick={() => onTakeTrick()}>
         Stich nehmen
       </button>
+      {context.players.every((player) => player.cards?.length === 0) && (
+        <button onClick={() => onFinishGame()}>Runde beenden</button>
+      )}
     </>
   )
 }
