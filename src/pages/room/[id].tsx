@@ -11,7 +11,7 @@ import { GameContext, GameEvent, gameMachine } from 'machines/game-machine'
 import { Player } from 'model/player'
 import { useRouter } from 'next/router'
 import React from 'react'
-import { colors, fontSet } from 'styles/global'
+import { fontSet } from 'styles/global'
 import { Sender, State } from 'xstate'
 
 export default function Room() {
@@ -49,7 +49,6 @@ function GameMachine({ roomId, send, me, state }: GameMachineProps) {
         name={me.name}
         highlighted={me.id === state.context.currentPlayerId}
       />
-      <div css={{ height: '100px', width: '100%', background: colors.mint, flexShrink: 0 }} />
     </>
   )
 }

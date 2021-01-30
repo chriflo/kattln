@@ -1,6 +1,6 @@
 import { Header, headerHeight } from 'components/header'
 import 'normalize.css'
-import { GlobalStyles } from 'styles/global'
+import { colors, GlobalStyles } from 'styles/global'
 import Head from 'next/head'
 import { PusherProvider } from '@harelpls/use-pusher'
 
@@ -42,6 +42,7 @@ export default function MyApp({ Component, pageProps }: { Component: any; pagePr
           }}
         >
           <Component {...pageProps} />
+          <div css={{ height: '100px', width: '100%', background: colors.mint, flexShrink: 0 }} />
         </main>
       </div>
     </PusherProvider>
