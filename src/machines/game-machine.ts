@@ -68,11 +68,11 @@ export const gameMachine = Machine<GameContext, GameStateSchema, GameEvent>(
           START_BIDDING: {
             target: 'bidding',
             cond: fourPlayersInGame,
-            actions: ['initializeGame'],
           },
         },
       },
       bidding: {
+        entry: ['initializeGame'],
         on: {
           START_PLAYING: { target: 'playing', actions: ['startPlaying'] },
           CHOOSE_GAME: { target: 'bidding', actions: ['chooseGame'] },
@@ -150,7 +150,6 @@ export const gameMachine = Machine<GameContext, GameStateSchema, GameEvent>(
             }
           : c,
       ),
-      resetGame: assign((c, e) => (e.type === 'START_AGAIN' ? c : c)),
     },
     guards: {
       fourPlayersInGame,
