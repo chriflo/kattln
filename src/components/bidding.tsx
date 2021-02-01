@@ -1,5 +1,5 @@
-import { GameContext, GameEvent } from 'machines/game-machine'
-import { games } from 'model/game'
+import { GameContext, GameEvent, isItMyTurn } from 'machines/game-machine'
+import { games, WEITER } from 'model/game'
 import { Player } from 'model/player'
 import React from 'react'
 import { Sender } from 'xstate'
@@ -12,24 +12,19 @@ interface BiddingProps {
 }
 
 export function Bidding({ me, context, send }: BiddingProps) {
-  const { currentPlayerId, players } = context
+  const { players } = context
 
   function updateGameType(game: string) {
-    if (!isItMyTurn(currentPlayerId, me.id)) return
+    if (!isItMyTurn(context)) return
 
-    if (game === 'weiter') {
-      send({ type: 'CHOOSE_GAME', gamePlayed: null, triggerId: me.id })
-    } else {
-      const gamePlayed = { gameType: game, player: me }
-      send({ type: 'CHOOSE_GAME', gamePlayed, triggerId: me.id })
-      send({ type: 'START_PLAYING', triggerId: me.id })
-    }
+    const gamePlayed = { gameType: game, player: me }
+    send({ type: 'CHOOSE_GAME', gamePlayed, triggerId: me.id })
   }
 
   return (
     <>
       <GameChooser
-        isItMyTurn={isItMyTurn(currentPlayerId, me.id)}
+        isItMyTurn={isItMyTurn(context)}
         onChooseGame={(game) => updateGameType(game)}
         css={{ flexGrow: 1 }}
       />
@@ -58,14 +53,10 @@ function GameChooser({ onChooseGame, isItMyTurn, ...props }: GameChooserProps) {
         </li>
       ))}
       <li>
-        <button disabled={!isItMyTurn} onClick={() => onChooseGame('weiter')}>
+        <button disabled={!isItMyTurn} onClick={() => onChooseGame(WEITER)}>
           Weiter
         </button>
       </li>
     </ul>
   )
-}
-
-function isItMyTurn(currentPlayerId: string, myId: string): boolean {
-  return currentPlayerId === myId
 }

@@ -17,10 +17,20 @@ import { Sender, State } from 'xstate'
 
 export default function Room() {
   const roomId = useRouter().query.id?.toString()
-  const [state, send] = useMachine(gameMachine)
   const me = useForceUserName()
 
-  useSyncronizedRoom(state, send, me.id, roomId)
+  const [state, send] = useMachine<GameContext, GameEvent>(
+    gameMachine.withContext({
+      myId: me.id,
+      players: [me],
+      stack: [],
+      gamePlayed: null,
+      highlightCurrentPlayer: false,
+      playerThatStartedRound: null,
+    }),
+  )
+
+  useSyncronizedRoom(state, send, roomId)
 
   if (!roomId) return 'No room no party...'
   return <GameMachine roomId={roomId} send={send} me={me} state={state} />
@@ -51,7 +61,9 @@ function GameMachine({ roomId, send, me, state }: GameMachineProps) {
       <SinglePlayer
         css={{ margin: 20 }}
         name={me.name}
-        highlighted={me.id === state.context.currentPlayerId}
+        highlighted={
+          state.context.highlightCurrentPlayer && me.id === currentPlayerId(state.context.players)
+        }
       />
     </>
   )
@@ -74,13 +86,21 @@ function Players({
   me,
   ...props
 }: { context: GameContext; me: Player } & React.ComponentProps<'ul'>) {
+  const playersWithoutMe = context.players.filter((p) => p.id !== me.id)
+  const playersInCorrectOrder = [
+    ...playersWithoutMe.filter((p) => p.id > me.id),
+    ...playersWithoutMe.filter((p) => p.id < me.id),
+  ]
+
   return (
     <ul {...props}>
-      {context.players
-        .filter((p) => p.id !== me.id)
-        .map(({ id, name }) => (
-          <SinglePlayer key={id} name={name} highlighted={id === context.currentPlayerId} />
-        ))}
+      {playersInCorrectOrder.map(({ id, name }) => (
+        <SinglePlayer
+          key={id}
+          name={name}
+          highlighted={context.highlightCurrentPlayer && id === context.players[0].id}
+        />
+      ))}
     </ul>
   )
 }
@@ -90,3 +110,8 @@ const resetButtonStyles = css`
   top: 5px;
   left: 10px;
 `
+
+export function currentPlayerId(players: Player[]): string | undefined {
+  if (players.length < 1) return undefined
+  return players[0].id
+}

@@ -1,5 +1,5 @@
 import { css } from '@emotion/react'
-import { GameContext, GameEvent } from 'machines/game-machine'
+import { GameContext, GameEvent, isItMyTurn } from 'machines/game-machine'
 import { Player } from 'model/player'
 import React from 'react'
 import { Sender } from 'xstate'
@@ -16,32 +16,20 @@ interface GameProps {
 }
 
 export function Game({ me, context, send }: GameProps) {
-  const { currentPlayerId, stack, players } = context
+  const { stack, players } = context
+
   function onSubmitCard(playedCard: Card) {
-    console.log(currentPlayerId, me.id)
-    if (currentPlayerId !== me.id) return
-    console.log(me.id, playedCard)
-    send({
-      type: 'PLAY_CARD',
-      card: playedCard,
-      triggerId: me.id,
-    })
+    if (!isItMyTurn(context)) return
+
+    send({ type: 'PLAY_CARD', card: playedCard, triggerId: me.id })
   }
 
   function onTakeTrick() {
-    send({
-      type: 'TAKE_TRICK',
-      trick: stack,
-      player: me,
-      triggerId: me.id,
-    })
+    send({ type: 'TAKE_TRICK', trick: stack, player: me, triggerId: me.id })
   }
 
   function onFinishGame() {
-    send({
-      type: 'FINISH_GAME',
-      triggerId: me.id,
-    })
+    send({ type: 'FINISH_GAME', triggerId: me.id })
   }
 
   return (
@@ -60,7 +48,7 @@ export function Game({ me, context, send }: GameProps) {
       <Hand
         players={players}
         currentPlayer={me}
-        isItMyTurn={isItMyTurn(currentPlayerId, me.id)}
+        isItMyTurn={isItMyTurn(context)}
         onClickCard={(card: Card) => onSubmitCard(card)}
       />
       <button disabled={context.stack.length < 4} onClick={() => onTakeTrick()}>
@@ -69,10 +57,6 @@ export function Game({ me, context, send }: GameProps) {
       {countTricks(context) === 8 && <button onClick={() => onFinishGame()}>Runde beenden</button>}
     </>
   )
-}
-
-function isItMyTurn(currentPlayerId: string, myId: string): boolean {
-  return currentPlayerId === myId
 }
 
 function countTricks(context: GameContext) {

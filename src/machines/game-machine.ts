@@ -1,4 +1,5 @@
 import { Card } from 'model/card'
+import { WEITER } from 'model/game'
 import { Player } from 'model/player'
 import { Trick } from 'model/trick'
 import { assign, Machine, StateMachine } from 'xstate'
@@ -13,19 +14,14 @@ interface GameStateSchema {
 }
 
 type MyEvents =
-  | {
-      type: 'START_BIDDING'
-      currentPlayerId: string
-      players: Player[]
-      order: string[]
-    }
+  | { type: 'START_BIDDING'; freshPlayers: Player[] }
   | { type: 'START_PLAYING' }
   | { type: 'RESET_GAME' }
   | { type: 'FINISH_GAME' }
   | { type: 'START_AGAIN' }
   | { type: 'PLAY_CARD'; card: Card }
   | { type: 'TAKE_TRICK'; trick: Trick; player: Player }
-  | { type: 'CHOOSE_GAME'; gamePlayed: { gameType: string; player: Player } | null }
+  | { type: 'CHOOSE_GAME'; gamePlayed: { gameType: string; player: Player } }
 
 type TriggerEvents = { triggerId: string } & MyEvents
 
@@ -33,11 +29,12 @@ type UpdatePlayersEvent = { type: 'UPDATE_PLAYERS'; players: Player[] }
 export type GameEvent = UpdatePlayersEvent | TriggerEvents
 
 export interface GameContext {
-  currentPlayerId: string
-  players: Player[]
+  players: Player[] // players[0] is active player
   stack: Card[]
-  order: string[]
   gamePlayed: { gameType: string; player: Player } | null
+  myId: string
+  highlightCurrentPlayer: boolean
+  playerThatStartedRound: string | null
 }
 
 export type GameMachine = StateMachine<GameContext, GameStateSchema, GameEvent>
@@ -47,13 +44,6 @@ export const gameMachine = Machine<GameContext, GameStateSchema, GameEvent>(
   {
     strict: true,
     id: 'game',
-    context: {
-      currentPlayerId: '',
-      players: [],
-      stack: [],
-      order: [],
-      gamePlayed: null,
-    },
     initial: 'lobby',
     on: {
       RESET_GAME: 'lobby',
@@ -73,21 +63,27 @@ export const gameMachine = Machine<GameContext, GameStateSchema, GameEvent>(
       },
       bidding: {
         entry: ['initializeGame'],
+        always: [
+          {
+            target: 'playing',
+            cond: chosenGameIsNotWeiter,
+            actions: assign((c, e) => ({
+              players: updateCurrentPlayer(c.playerThatStartedRound ?? c.players[0].id, c.players),
+            })),
+          },
+        ],
         on: {
-          START_PLAYING: { target: 'playing', actions: ['startPlaying'] },
-          CHOOSE_GAME: { target: 'bidding', actions: ['chooseGame'] },
+          CHOOSE_GAME: [{ actions: ['chooseGame', 'nextPlayer'] }],
         },
       },
       playing: {
         on: {
           PLAY_CARD: {
-            target: 'playing',
-            actions: ['playCard'],
+            actions: ['playCard', 'nextPlayer'],
             cond: lessThanFourCardsPlayed,
           },
           FINISH_GAME: 'evaluation',
           TAKE_TRICK: {
-            target: 'playing',
             actions: ['takeTrick'],
             cond: fourCardsPlayed,
           },
@@ -100,81 +96,75 @@ export const gameMachine = Machine<GameContext, GameStateSchema, GameEvent>(
   },
   {
     actions: {
-      initializeGame: assign((c, e) =>
-        e.type === 'START_BIDDING'
-          ? {
-              currentPlayerId: e.currentPlayerId,
-              order: e.order,
-              players: e.players.map((player) => {
-                return { ...player, tricks: [] }
-              }),
-            }
-          : c,
-      ),
+      initializeGame: assign((c, e) => {
+        if (e.type === 'START_BIDDING') {
+          return {
+            players: updateCurrentPlayer(e.triggerId, e.freshPlayers),
+            stack: [],
+            gamePlayed: { gameType: WEITER, player: c.players[0] },
+            highlightCurrentPlayer: true,
+            playerThatStartedRound: e.triggerId,
+          }
+        } else {
+          return c
+        }
+      }),
       updatePlayers: assign((c, e) =>
         e.type === 'UPDATE_PLAYERS'
-          ? {
-              players: e.players,
-            }
+          ? { players: e.players.sort((p1, p2) => (p1.id > p2.id ? 1 : -1)) }
           : c,
       ),
       playCard: assign((c, e) =>
         e.type === 'PLAY_CARD'
           ? {
               stack: [...c.stack, e.card],
-              currentPlayerId: isFourthCardBeyingPlayed(c.stack)
-                ? undefined
-                : c.order[findNextPlayerIndex(c.order, c.currentPlayerId)],
-              players: removeCardFromHand(c.players, e.card, c.currentPlayerId),
+              players: removeCardFromHand(c.players, e.card),
+              highlightCurrentPlayer: isFourthCardBeyingPlayed(c.stack) ? false : true,
             }
           : c,
       ),
-      chooseGame: assign((c, e) =>
-        e.type === 'CHOOSE_GAME'
-          ? {
-              gamePlayed: e.gamePlayed,
-              currentPlayerId: c.order[findNextPlayerIndex(c.order, c.currentPlayerId)],
-            }
-          : c,
-      ),
-      startPlaying: assign({
-        order: (c) => c.players.map((p) => p.id),
-        currentPlayerId: (c) => c.players[0].id,
-      }),
+      chooseGame: assign((c, e) => (e.type === 'CHOOSE_GAME' ? { gamePlayed: e.gamePlayed } : c)),
       takeTrick: assign((c, e) =>
         e.type === 'TAKE_TRICK'
           ? {
               stack: [],
-              currentPlayerId: e.player.id,
               players: giveTrickToPlayer(c.players, e.player.id, e.trick),
+              highlightCurrentPlayer: true,
             }
           : c,
       ),
+      nextPlayer: assign({
+        players: (c) => shiftPlayers(c.players),
+      }),
     },
     guards: {
       fourPlayersInGame,
+      chosenGameIsNotWeiter,
     },
   },
 )
+
+export function isItMyTurn(context: GameContext): boolean {
+  return context.players[0].id === context.myId
+}
+
+function chosenGameIsNotWeiter(context: GameContext) {
+  return context.gamePlayed?.gameType !== WEITER
+}
 
 function fourPlayersInGame(context: GameContext) {
   return context.players.length === 4
 }
 
-function findNextPlayerIndex(order: string[], currentPlayerId: string) {
-  const currentPlayerIndex = order.findIndex((id) => currentPlayerId === id)
-  return currentPlayerIndex < order.length - 1 ? currentPlayerIndex + 1 : 0
-}
-
-function removeCardFromHand(players: Player[], card: Card, currentPlayerId: string): Player[] {
-  const currentPlayer = players.find((p) => p.id === currentPlayerId)
+function removeCardFromHand(players: Player[], card: Card): Player[] {
+  const currentPlayer = players[0]
   if (!currentPlayer) return players
-  const updatedCards = currentPlayer?.cards?.filter((c) => c.id !== card.id)
+  const updatedCards = currentPlayer.cards?.filter((c) => c.id !== card.id)
 
-  return [
-    ...players.filter((p) => p.id !== currentPlayerId),
-    { ...currentPlayer, cards: updatedCards },
-  ]
+  return players.map((p) => {
+    if (p.id === currentPlayer.id) return { ...currentPlayer, cards: updatedCards }
+    return p
+  })
 }
 
 function fourCardsPlayed(context: GameContext) {
@@ -190,15 +180,26 @@ function giveTrickToPlayer(players: Player[], playerId: string, trick: Trick): P
   if (!takingPlayer) return players
   const updatedTricks = takingPlayer.tricks ? takingPlayer.tricks.concat([trick]) : [trick]
 
-  return [
-    ...players.filter((p) => p.id !== playerId),
-    {
-      ...takingPlayer,
-      tricks: updatedTricks,
-    },
-  ]
+  return updateCurrentPlayer(
+    playerId,
+    players.map((p) => (p.id === takingPlayer.id ? { ...takingPlayer, tricks: updatedTricks } : p)),
+  )
 }
 
 function isFourthCardBeyingPlayed(stack: Card[]) {
   return stack.length === 3
+}
+
+function updateCurrentPlayer(id: string, players: Player[]): Player[] {
+  if (players.length < 1) return []
+  if (players[0].id === id) return players
+  return updateCurrentPlayer(id, shiftPlayers(players))
+}
+
+function shiftPlayers(players: Player[]): Player[] {
+  if (players.length > 0) {
+    const firstPlayer = players[0]
+    return [...players.slice(1), firstPlayer]
+  }
+  return []
 }

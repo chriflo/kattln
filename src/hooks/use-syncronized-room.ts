@@ -8,9 +8,9 @@ import { Sender, State } from 'xstate'
 export function useSyncronizedRoom(
   state: State<GameContext, GameEvent>,
   send: Sender<GameEvent>,
-  myId: string,
   roomId?: string,
 ) {
+  const { myId } = state.context
   const { channel } = usePresenceChannel(roomId ? `presence-${roomId}` : undefined)
 
   const trigger = useClientTrigger<{ event: GameEvent; triggerId: string }>(channel)

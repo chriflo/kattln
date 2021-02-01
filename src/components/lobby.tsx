@@ -13,21 +13,17 @@ export function Lobby({ me, context, send }: LobbyProps) {
   const players = context?.players ?? []
   function onStartGame() {
     const mixedCards = shuffleCards()
-    const playersWithCards = players.map((player, index) => {
+    const freshPlayers = players.map((player, index) => {
       const cardsForPlayer = mixedCards.filter(
         (_, cardIndex) => cardIndex % players.length === index,
       )
-      return { ...player, cards: cardsForPlayer }
+      return { ...player, cards: cardsForPlayer, tricks: [] }
     })
-
-    send &&
-      send({
-        type: 'START_BIDDING',
-        currentPlayerId: players[0].id,
-        players: playersWithCards,
-        order: players.map((p) => p.id),
-        triggerId: me.id,
-      })
+    send({
+      type: 'START_BIDDING',
+      freshPlayers: freshPlayers,
+      triggerId: me.id,
+    })
   }
 
   return (
