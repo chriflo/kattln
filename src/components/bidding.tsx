@@ -72,10 +72,10 @@ function GameChooser({ onChooseGame, isItMyTurn, ...props }: GameChooserProps) {
     <div
       css={{
         display: 'flex',
-        flexWrap: 'wrap',
         justifyContent: 'center',
         alignItems: 'center',
         flexDirection: 'column',
+        width: 300,
       }}
       {...props}
     >

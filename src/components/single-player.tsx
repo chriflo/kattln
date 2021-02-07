@@ -5,10 +5,12 @@ import { colors } from 'styles/global'
 export function SinglePlayer({
   name,
   highlighted,
+  itsMe,
   ...props
 }: {
   name: string
   highlighted: boolean
+  itsMe: boolean
 }) {
   return (
     <div
@@ -31,7 +33,7 @@ export function SinglePlayer({
         `}
         key={name}
       >
-        {name}
+        {`${itsMe ? 'du - ' : ''}${name}`}
       </p>
     </div>
   )

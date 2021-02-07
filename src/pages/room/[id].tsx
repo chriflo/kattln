@@ -1,6 +1,6 @@
 import { css } from '@emotion/react'
 import { useMachine } from '@xstate/react'
-import { Bidding, GameWithIcon } from 'components/bidding'
+import { Bidding } from 'components/bidding'
 import { LeftArrowButton } from 'components/buttons'
 import { Evaluation } from 'components/evaluation'
 import { Game } from 'components/game'
@@ -8,9 +8,10 @@ import { Lobby } from 'components/lobby'
 import { SinglePlayer } from 'components/single-player'
 import { useForceUserName } from 'hooks/use-force-user-name'
 import { useSyncronizedRoom } from 'hooks/use-syncronized-room'
-import { GameContext, GameEvent, gameMachine, sortPlayers } from 'machines/game-machine'
+import { GameContext, GameEvent, gameMachine, sortPlayersById } from 'machines/game-machine'
 import { Player } from 'model/player'
 import { useRouter } from 'next/router'
+import { sort } from 'ramda'
 import React from 'react'
 import { fontSet } from 'styles/global'
 import { Sender, State } from 'xstate'
@@ -44,6 +45,7 @@ interface GameMachineProps {
 
 function GameMachine({ roomId, send, me, state }: GameMachineProps) {
   const { gamePlayed } = state.context
+
   return (
     <>
       <ResetButton send={send} myId={me.id} css={resetButtonStyles} />
@@ -53,23 +55,27 @@ function GameMachine({ roomId, send, me, state }: GameMachineProps) {
         css={[fontSet.headline, { marginTop: 10 }]}
       />
       <Players
-        me={me}
         context={state.context}
-        css={{ marginTop: 20, display: 'flex', width: '100%', justifyContent: 'space-around' }}
+        css={{
+          marginTop: 20,
+          display: 'flex',
+          width: '100%',
+          justifyContent: 'space-around',
+          flexShrink: 0,
+        }}
       />
-      {state.matches('bidding') ? <Bidding context={state.context} me={me} send={send} /> : null}
-      {state.matches('playing') ? <Game context={state.context} me={me} send={send} /> : null}
-      {state.matches('lobby') ? <Lobby context={state.context} me={me} send={send} /> : null}
+      {state.matches('bidding') ? (
+        <Bidding css={{ flexShrink: 0 }} context={state.context} me={me} send={send} />
+      ) : null}
+      {state.matches('playing') ? (
+        <Game css={{ flexShrink: 0 }} context={state.context} me={me} send={send} />
+      ) : null}
+      {state.matches('lobby') ? (
+        <Lobby css={{ flexShrink: 0 }} context={state.context} me={me} send={send} />
+      ) : null}
       {state.matches('evaluation') ? (
         <Evaluation context={state.context} me={me} send={send} />
       ) : null}
-      <SinglePlayer
-        css={{ margin: 20 }}
-        name={me.name}
-        highlighted={
-          state.context.highlightCurrentPlayer && me.id === currentPlayerId(state.context.players)
-        }
-      />
     </>
   )
 }
@@ -86,21 +92,14 @@ function ResetButton({ send, myId, ...props }: { send: Sender<GameEvent>; myId: 
   )
 }
 
-function Players({
-  context,
-  me,
-  ...props
-}: { context: GameContext; me: Player } & React.ComponentProps<'ul'>) {
-  const playersWithoutMe = context.players.filter((p) => p.id !== me.id)
-  const playersInCorrectOrder = [
-    ...playersWithoutMe.filter((p) => p.id > me.id).sort(sortPlayers),
-    ...playersWithoutMe.filter((p) => p.id < me.id).sort(sortPlayers),
-  ]
+function Players({ context, ...props }: { context: GameContext } & React.ComponentProps<'ul'>) {
+  const sortedPlayers = sort(sortPlayersById, context.players)
 
   return (
     <ul {...props}>
-      {playersInCorrectOrder.map(({ id, name }) => (
+      {sortedPlayers.map(({ id, name }) => (
         <SinglePlayer
+          itsMe={id === context.myId}
           key={id}
           name={name}
           highlighted={context.highlightCurrentPlayer && id === context.players[0].id}

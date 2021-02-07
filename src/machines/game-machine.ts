@@ -3,6 +3,7 @@ import { Card } from 'model/card'
 import { Player } from 'model/player'
 import { Trick } from 'model/trick'
 import { assign, Machine, StateMachine } from 'xstate'
+import { sort } from 'ramda'
 
 interface GameStateSchema {
   states: {
@@ -50,9 +51,9 @@ export const gameMachine = Machine<GameContext, GameStateSchema, GameEvent>(
     },
     states: {
       lobby: {
+        entry: ['resetGame'],
         on: {
           UPDATE_PLAYERS: {
-            target: 'lobby',
             actions: ['updatePlayers'],
           },
           START_BIDDING: {
@@ -96,6 +97,14 @@ export const gameMachine = Machine<GameContext, GameStateSchema, GameEvent>(
   },
   {
     actions: {
+      resetGame: assign((c, e) => {
+        return {
+          players: c.players.map((p) => ({ ...p, tricks: [], cards: [] })),
+          stack: [],
+          gamePlayed: null,
+          highlightCurrentPlayer: false,
+        }
+      }),
       initializeGame: assign((c, e) => {
         if (e.type === 'START_BIDDING') {
           return {
@@ -110,7 +119,7 @@ export const gameMachine = Machine<GameContext, GameStateSchema, GameEvent>(
         }
       }),
       updatePlayers: assign((c, e) =>
-        e.type === 'UPDATE_PLAYERS' ? { players: e.players.sort(sortPlayers) } : c,
+        e.type === 'UPDATE_PLAYERS' ? { players: sort(sortPlayersById, e.players) } : c,
       ),
       playCard: assign((c, e) =>
         e.type === 'PLAY_CARD'
@@ -202,6 +211,6 @@ function shiftPlayers(players: Player[]): Player[] {
   return []
 }
 
-export function sortPlayers(p1: Player, p2: Player): number {
+export function sortPlayersById(p1: Player, p2: Player): number {
   return p1.id > p2.id ? 1 : -1
 }

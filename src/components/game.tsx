@@ -52,9 +52,11 @@ export function Game({ me, context, send }: GameProps) {
         isItMyTurn={isItMyTurn(context)}
         onClickCard={(card: Card) => onSubmitCard(card)}
       />
-      <Button disabled={context.stack.length < 4} onClick={() => onTakeTrick()}>
-        Stich nehmen
-      </Button>
+      {context.stack.length === 4 && (
+        <Button css={{ margin: 10 }} onClick={() => onTakeTrick()}>
+          Stich nehmen
+        </Button>
+      )}
       {countTricks(context) === 8 && <button onClick={() => onFinishGame()}>Runde beenden</button>}
     </>
   )

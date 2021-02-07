@@ -35,6 +35,7 @@ export function useSyncronizedRoom(
   const members = getPlayersFromMembers(channel?.members)
 
   React.useEffect(() => {
+    if (members.length < 2) return
     if (state.context.players.length !== members.length) {
       send({ type: 'UPDATE_PLAYERS', players: members })
     }
