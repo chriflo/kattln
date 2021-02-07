@@ -110,9 +110,7 @@ export const gameMachine = Machine<GameContext, GameStateSchema, GameEvent>(
         }
       }),
       updatePlayers: assign((c, e) =>
-        e.type === 'UPDATE_PLAYERS'
-          ? { players: e.players.sort((p1, p2) => (p1.id > p2.id ? 1 : -1)) }
-          : c,
+        e.type === 'UPDATE_PLAYERS' ? { players: e.players.sort(sortPlayers) } : c,
       ),
       playCard: assign((c, e) =>
         e.type === 'PLAY_CARD'
@@ -202,4 +200,8 @@ function shiftPlayers(players: Player[]): Player[] {
     return [...players.slice(1), firstPlayer]
   }
   return []
+}
+
+export function sortPlayers(p1: Player, p2: Player): number {
+  return p1.id > p2.id ? 1 : -1
 }

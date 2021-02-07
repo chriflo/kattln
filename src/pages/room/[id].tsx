@@ -8,7 +8,7 @@ import { Lobby } from 'components/lobby'
 import { SinglePlayer } from 'components/single-player'
 import { useForceUserName } from 'hooks/use-force-user-name'
 import { useSyncronizedRoom } from 'hooks/use-syncronized-room'
-import { GameContext, GameEvent, gameMachine } from 'machines/game-machine'
+import { GameContext, GameEvent, gameMachine, sortPlayers } from 'machines/game-machine'
 import { Player } from 'model/player'
 import { useRouter } from 'next/router'
 import React from 'react'
@@ -88,8 +88,8 @@ function Players({
 }: { context: GameContext; me: Player } & React.ComponentProps<'ul'>) {
   const playersWithoutMe = context.players.filter((p) => p.id !== me.id)
   const playersInCorrectOrder = [
-    ...playersWithoutMe.filter((p) => p.id > me.id),
-    ...playersWithoutMe.filter((p) => p.id < me.id),
+    ...playersWithoutMe.filter((p) => p.id > me.id).sort(sortPlayers),
+    ...playersWithoutMe.filter((p) => p.id < me.id).sort(sortPlayers),
   ]
 
   return (
