@@ -3,6 +3,7 @@ import { allIcons, Icon } from 'model/card'
 import { PlayableGame, playableGames } from 'model/game'
 import { Player } from 'model/player'
 import React from 'react'
+import { colors } from 'styles/global'
 import { Sender } from 'xstate'
 import { Button } from './buttons'
 import { CardIcon } from './card-icons'
@@ -83,7 +84,7 @@ function GameChooser({ onChooseGame, isItMyTurn, ...props }: GameChooserProps) {
         {playableGames.map((playableGame) => (
           <li key={playableGame}>
             <Button
-              css={game?.type === playableGame && { background: 'green', color: 'white' }}
+              css={game?.type === playableGame && { background: colors.green, color: colors.mint }}
               disabled={!isItMyTurn}
               onClick={() => setGame({ type: playableGame, icon: null })}
             >
@@ -95,7 +96,7 @@ function GameChooser({ onChooseGame, isItMyTurn, ...props }: GameChooserProps) {
       <div css={{ display: 'flex', marginTop: 10 }}>
         {allIcons.map((icon) => (
           <Button
-            css={game?.icon === icon && { background: 'green', color: 'white' }}
+            css={game?.icon === icon && { background: colors.green, color: colors.mint }}
             disabled={!Boolean(game?.type)}
             key={icon}
             icon={<CardIcon icon={icon} css={{ height: 24 }} />}

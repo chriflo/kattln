@@ -99,5 +99,7 @@ const styles = {
     border: 2px transparent solid;
     padding: 4px 10px;
     cursor: pointer;
+    background: ${colors.mint};
+    color: ${colors.green};
   `,
 }
