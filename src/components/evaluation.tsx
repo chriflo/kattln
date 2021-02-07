@@ -1,7 +1,9 @@
-import { GameContext, GameEvent } from 'machines/game-machine'
+import { GameContext, GameEvent } from 'machines/machine-model'
+import { shuffleCards } from 'model/card'
 import { Player } from 'model/player'
 import React from 'react'
 import { Sender } from 'xstate'
+import { Button } from './buttons'
 
 interface EvaluationProps {
   me: Player
@@ -19,12 +21,24 @@ export function Evaluation({ me, context, send }: EvaluationProps) {
   }, 0)
 
   function onNextRound() {
-    send({ type: 'START_AGAIN', triggerId: me.id })
+    const { players } = context
+    const mixedCards = shuffleCards()
+    const freshPlayers = players.map((player, index) => {
+      const cardsForPlayer = mixedCards.filter(
+        (_, cardIndex) => cardIndex % players.length === index,
+      )
+      return { ...player, cards: cardsForPlayer, tricks: [] }
+    })
+    send({ type: 'START_BIDDING', triggerId: me.id, freshPlayers })
   }
   return (
     <>
-      <p>Du hast {myPoints ? myPoints : 0} Punkte gemacht</p>
-      <button onClick={() => onNextRound()}>Nächste Runde</button>
+      <p css={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
+        Du hast {myPoints ? myPoints : 0} Punkte gemacht
+      </p>
+      <Button css={{ margin: 10 }} onClick={() => onNextRound()}>
+        Nächste Runde
+      </Button>
     </>
   )
 }

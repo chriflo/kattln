@@ -1,5 +1,6 @@
-import { usePresenceChannel, useClientTrigger, useEvent } from '@harelpls/use-pusher'
-import { GameContext, GameEvent } from 'machines/game-machine'
+import { useClientTrigger, useEvent, usePresenceChannel } from '@harelpls/use-pusher'
+import { GameContext } from 'machines/machine-model'
+import { GameEvent } from 'machines/machine-model'
 import { getPlayersFromMembers } from 'model/pusher-members'
 import React from 'react'
 import { Sender, State } from 'xstate'
@@ -12,6 +13,11 @@ export function useSyncronizedRoom(
 ) {
   const { myId } = state.context
   const { channel } = usePresenceChannel(roomId ? `presence-${roomId}` : undefined)
+
+  // channel?.bind('pusher:member_removed', (member: PusherMember) => {
+  //   alert(`${member.info.name} hat die Runde verlassen...`)
+  //   // send({ type: 'PLAYER_LEFT', id: member.id })
+  // })
 
   const trigger = useClientTrigger<{ event: GameEvent; triggerId: string }>(channel)
 

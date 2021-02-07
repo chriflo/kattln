@@ -8,7 +8,9 @@ import { Lobby } from 'components/lobby'
 import { SinglePlayer } from 'components/single-player'
 import { useForceUserName } from 'hooks/use-force-user-name'
 import { useSyncronizedRoom } from 'hooks/use-syncronized-room'
-import { GameContext, GameEvent, gameMachine, sortPlayersById } from 'machines/game-machine'
+import { gameMachine } from 'machines/game-machine'
+import { GameContext, GameEvent } from 'machines/machine-model'
+import { sortPlayersById } from 'machines/players-helper'
 import { Player } from 'model/player'
 import { useRouter } from 'next/router'
 import { sort } from 'ramda'
@@ -64,16 +66,16 @@ function GameMachine({ roomId, send, me, state }: GameMachineProps) {
           flexShrink: 0,
         }}
       />
-      {state.matches('bidding') ? (
+      {state.matches('inGame.bidding') ? (
         <Bidding css={{ flexShrink: 0 }} context={state.context} me={me} send={send} />
       ) : null}
-      {state.matches('playing') ? (
+      {state.matches('inGame.playing') ? (
         <Game css={{ flexShrink: 0 }} context={state.context} me={me} send={send} />
       ) : null}
       {state.matches('lobby') ? (
         <Lobby css={{ flexShrink: 0 }} context={state.context} me={me} send={send} />
       ) : null}
-      {state.matches('evaluation') ? (
+      {state.matches('inGame.evaluation') ? (
         <Evaluation context={state.context} me={me} send={send} />
       ) : null}
     </>

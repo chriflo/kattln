@@ -1,4 +1,5 @@
-import { GameContext, GameEvent, isItMyTurn } from 'machines/game-machine'
+import { isItMyTurn } from 'machines/game-machine'
+import { GameContext, GameEvent } from 'machines/machine-model'
 import { allIcons, Icon } from 'model/card'
 import { PlayableGame, playableGames } from 'model/game'
 import { Player } from 'model/player'

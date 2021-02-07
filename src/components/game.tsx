@@ -1,5 +1,7 @@
 import { css } from '@emotion/react'
-import { GameContext, GameEvent, isItMyTurn } from 'machines/game-machine'
+import { isItMyTurn } from 'machines/game-machine'
+import { GameContext, GameEvent } from 'machines/machine-model'
+import { allCards } from 'model/card'
 import { Player } from 'model/player'
 import React from 'react'
 import { Sender } from 'xstate'
@@ -57,13 +59,6 @@ export function Game({ me, context, send }: GameProps) {
           Stich nehmen
         </Button>
       )}
-      {countTricks(context) === 8 && <button onClick={() => onFinishGame()}>Runde beenden</button>}
     </>
   )
-}
-
-function countTricks(context: GameContext) {
-  return context.players.reduce((prevCount, curPlayer) => {
-    return curPlayer.tricks ? curPlayer.tricks.length + prevCount : 0
-  }, 0)
 }

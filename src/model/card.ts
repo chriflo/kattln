@@ -27,7 +27,7 @@ const allTypes: CardType[] = [
   { name: '7', value: 0 },
 ]
 
-const allCards: Card[] = allIcons.flatMap((icon) => {
+export const allCards: Card[] = allIcons.flatMap((icon) => {
   return allTypes.map((cardType) => ({
     icon,
     name: cardType.name,

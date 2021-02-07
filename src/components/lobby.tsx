@@ -1,4 +1,4 @@
-import { GameContext, GameEvent } from 'machines/game-machine'
+import { GameContext, GameEvent } from 'machines/machine-model'
 import { shuffleCards } from 'model/card'
 import { Player } from 'model/player'
 import { Sender } from 'xstate'
