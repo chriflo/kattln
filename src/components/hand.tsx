@@ -79,7 +79,7 @@ function ClickableCard({
 }: React.ComponentProps<'div'> & Pick<HandProps, 'isItMyTurn' | 'onClickCard'> & { card: Card }) {
   return (
     <div {...props}>
-      <Card card={card} disabled={!isItMyTurn} onClick={() => onClickCard(card)} />
+      <Card card={card} disabled={!isItMyTurn} onClick={() => onClickCard && onClickCard(card)} />
       {children ? children : null}
     </div>
   )
