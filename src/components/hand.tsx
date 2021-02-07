@@ -11,7 +11,7 @@ interface HandProps {
   players: Player[]
   currentPlayer: Player
   isItMyTurn?: boolean
-  onClickCard: (card: Card) => void
+  onClickCard: ((card: Card) => void) | null
 }
 
 export function Hand({ players, currentPlayer, isItMyTurn = false, onClickCard }: HandProps) {

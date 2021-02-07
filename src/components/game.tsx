@@ -3,6 +3,7 @@ import { GameContext, GameEvent, isItMyTurn } from 'machines/game-machine'
 import { Player } from 'model/player'
 import React from 'react'
 import { Sender } from 'xstate'
+import { Button } from './buttons'
 import { Card } from './card'
 import { CardStack } from './card-stack'
 import { Hand } from './hand'
@@ -51,9 +52,9 @@ export function Game({ me, context, send }: GameProps) {
         isItMyTurn={isItMyTurn(context)}
         onClickCard={(card: Card) => onSubmitCard(card)}
       />
-      <button disabled={context.stack.length < 4} onClick={() => onTakeTrick()}>
+      <Button disabled={context.stack.length < 4} onClick={() => onTakeTrick()}>
         Stich nehmen
-      </button>
+      </Button>
       {countTricks(context) === 8 && <button onClick={() => onFinishGame()}>Runde beenden</button>}
     </>
   )

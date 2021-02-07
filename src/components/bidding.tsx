@@ -1,8 +1,11 @@
 import { GameContext, GameEvent, isItMyTurn } from 'machines/game-machine'
-import { games, WEITER } from 'model/game'
+import { allIcons, Icon } from 'model/card'
+import { PlayableGame, playableGames } from 'model/game'
 import { Player } from 'model/player'
 import React from 'react'
 import { Sender } from 'xstate'
+import { Button } from './buttons'
+import { CardIcon } from './card-icons'
 import { Hand } from './hand'
 
 interface BiddingProps {
@@ -14,10 +17,10 @@ interface BiddingProps {
 export function Bidding({ me, context, send }: BiddingProps) {
   const { players } = context
 
-  function updateGameType(game: string) {
+  function updateGameType(game: GameWithIcon | null) {
     if (!isItMyTurn(context)) return
 
-    const gamePlayed = { gameType: game, player: me }
+    const gamePlayed = !game ? null : { gameType: game, player: me }
     send({ type: 'CHOOSE_GAME', gamePlayed, triggerId: me.id })
   }
 
@@ -28,35 +31,90 @@ export function Bidding({ me, context, send }: BiddingProps) {
         onChooseGame={(game) => updateGameType(game)}
         css={{ flexGrow: 1 }}
       />
-      {/* eslint-disable-next-line @typescript-eslint/no-empty-function */}
-      <Hand players={players} currentPlayer={me} onClickCard={() => {}} />
+      <Hand players={players} currentPlayer={me} onClickCard={null} />
     </>
   )
 }
 
-interface GameChooserProps extends React.ComponentProps<'ul'> {
+interface GameChooserProps extends React.ComponentProps<'div'> {
   isItMyTurn: boolean
-  onChooseGame: (game: string) => void
+  onChooseGame: (game: GameWithIcon | null) => void
 }
 
+export type GameWithIcon = { type: PlayableGame; icon: Icon | null }
+
 function GameChooser({ onChooseGame, isItMyTurn, ...props }: GameChooserProps) {
+  const [game, setGame] = React.useState<GameWithIcon | null>(null)
+
+  function confirmGame({ type, icon }: GameWithIcon) {
+    if (type === 'Wenz') {
+      const confirmed = confirm(`Willst du wirklich einen Wenz spielen?`)
+      confirmed ? onChooseGame({ type, icon }) : setGame(null)
+    }
+
+    if (type === 'Sauspiel' && icon) {
+      const confirmed = confirm(`Willst du wirklich ein Sauspiel auf ${icon} spielen?`)
+      confirmed ? onChooseGame({ type, icon }) : setGame(null)
+    }
+
+    if (type === 'Solo' && icon) {
+      const confirmed = confirm(`Willst du wirklich ein ${icon}-Solo spielen?`)
+      confirmed ? onChooseGame({ type, icon }) : setGame(null)
+    }
+  }
+
+  React.useEffect(() => {
+    if (game?.type === 'Wenz') return confirmGame({ type: 'Wenz', icon: null })
+    if (game?.type && game?.icon) return confirmGame(game)
+  })
+
   return (
-    <ul
-      css={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center' }}
+    <div
+      css={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'column',
+      }}
       {...props}
     >
-      {games.map((game) => (
-        <li key={game}>
-          <button disabled={!isItMyTurn} onClick={() => onChooseGame(game)}>
-            {game}
-          </button>
-        </li>
-      ))}
-      <li>
-        <button disabled={!isItMyTurn} onClick={() => onChooseGame(WEITER)}>
-          Weiter
-        </button>
-      </li>
-    </ul>
+      <ul css={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+        {playableGames.map((playableGame) => (
+          <li key={playableGame}>
+            <Button
+              css={game?.type === playableGame && { background: 'green', color: 'white' }}
+              disabled={!isItMyTurn}
+              onClick={() => setGame({ type: playableGame, icon: null })}
+            >
+              {playableGame}
+            </Button>
+          </li>
+        ))}
+      </ul>
+      <div css={{ display: 'flex', marginTop: 10 }}>
+        {allIcons.map((icon) => (
+          <Button
+            css={game?.icon === icon && { background: 'green', color: 'white' }}
+            disabled={!Boolean(game?.type)}
+            key={icon}
+            icon={<CardIcon icon={icon} css={{ height: 24 }} />}
+            onClick={() => setGame((prev) => (prev?.type ? { type: prev.type, icon: icon } : prev))}
+          >
+            {icon}
+          </Button>
+        ))}
+      </div>
+      <Button
+        css={{ marginTop: 10 }}
+        disabled={!isItMyTurn}
+        onClick={() => {
+          setGame(null)
+          onChooseGame(null)
+        }}
+      >
+        Weiter
+      </Button>
+    </div>
   )
 }

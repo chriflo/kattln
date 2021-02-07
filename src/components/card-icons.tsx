@@ -1,4 +1,17 @@
 import React from 'react'
+import { Icon } from 'model/card'
+import { UnreachableCaseError } from 'utils/unreachable-case-error'
+
+interface CardIconProps extends React.ComponentPropsWithoutRef<'svg'> {
+  icon: Icon
+}
+export function CardIcon({ icon, ...props }: CardIconProps) {
+  if (icon === 'blatt') return <BlattIcon {...props} />
+  if (icon === 'schelle') return <SchelleIcon {...props} />
+  if (icon === 'herz') return <HerzIcon {...props} />
+  if (icon === 'eichel') return <EichelIcon {...props} />
+  throw new UnreachableCaseError(icon)
+}
 
 export const EichelIcon = (props: React.ComponentProps<'svg'>) => {
   return (

@@ -1,13 +1,13 @@
 import { css } from '@emotion/react'
 import { colors } from 'styles/global'
 
-type ButtonProps = { title?: string } & React.ButtonHTMLAttributes<HTMLButtonElement>
+type TitleButtonProps = { title?: string } & React.ButtonHTMLAttributes<HTMLButtonElement>
 
-export function RightArrowButton({ title, ...props }: ButtonProps) {
+export function RightArrowButton({ title, ...props }: TitleButtonProps) {
   return <IconButton title={title} svgName="right-arrow" {...props} />
 }
 
-export function LeftArrowButton({ title, ...props }: ButtonProps) {
+export function LeftArrowButton({ title, ...props }: TitleButtonProps) {
   return (
     <IconButton
       title={title}
@@ -22,7 +22,7 @@ export function LeftArrowButton({ title, ...props }: ButtonProps) {
   )
 }
 
-export function GameboyButton({ title, ...props }: ButtonProps) {
+export function GameboyButton({ title, ...props }: TitleButtonProps) {
   return <IconButton title={title} svgName="game-boy" {...props} />
 }
 
@@ -33,6 +33,32 @@ export function IconButton({ title, svgName, ...props }: { title?: string; svgNa
         <img alt="" src={`/${svgName}.svg`} css={{ width: '80%', height: 'auto' }} />
       </div>
       {title ? title : null}
+    </button>
+  )
+}
+
+interface ButtonProps extends React.ComponentProps<'button'> {
+  icon?: JSX.Element | string
+}
+export function Button({ children, icon, ...props }: ButtonProps) {
+  if (!icon)
+    return (
+      <button css={styles.textButton} {...props}>
+        {children}
+      </button>
+    )
+
+  const buttonIcon =
+    typeof icon === 'string' ? (
+      <img alt="" src={`/${icon}.svg`} css={{ width: '80%', height: 'auto' }} />
+    ) : (
+      icon
+    )
+
+  return (
+    <button css={styles.button} {...props}>
+      <div css={styles.icon}>{buttonIcon}</div>
+      {children}
     </button>
   )
 }
@@ -49,10 +75,6 @@ const styles = {
     justify-content: center;
     align-items: center;
     margin-bottom: 10px;
-
-    &:hover {
-      border: 3px ${colors.mint} solid;
-    }
   `,
   button: css`
     cursor: pointer;
@@ -62,5 +84,20 @@ const styles = {
     flex-direction: column;
     align-items: center;
     border-bottom: 3px transparent solid;
+
+    &:disabled {
+      opacity: 0.4;
+    }
+
+    &:hover:not(:disabled) {
+      > * {
+        border: 3px ${colors.mint} solid;
+      }
+    }
+  `,
+  textButton: css`
+    border: 2px transparent solid;
+    padding: 4px 10px;
+    cursor: pointer;
   `,
 }

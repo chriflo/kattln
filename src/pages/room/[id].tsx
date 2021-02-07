@@ -1,6 +1,6 @@
 import { css } from '@emotion/react'
 import { useMachine } from '@xstate/react'
-import { Bidding } from 'components/bidding'
+import { Bidding, GameWithIcon } from 'components/bidding'
 import { LeftArrowButton } from 'components/buttons'
 import { Evaluation } from 'components/evaluation'
 import { Game } from 'components/game'
@@ -43,10 +43,15 @@ interface GameMachineProps {
 }
 
 function GameMachine({ roomId, send, me, state }: GameMachineProps) {
+  const { gamePlayed } = state.context
   return (
     <>
       <ResetButton send={send} myId={me.id} css={resetButtonStyles} />
-      <h1 css={[fontSet.headline, { marginTop: 20 }]}>Runde - {roomId}</h1>
+      <RoomHeadline
+        gamePlayed={gamePlayed}
+        roomId={roomId}
+        css={[fontSet.headline, { marginTop: 10 }]}
+      />
       <Players
         me={me}
         context={state.context}
@@ -114,4 +119,22 @@ const resetButtonStyles = css`
 export function currentPlayerId(players: Player[]): string | undefined {
   if (players.length < 1) return undefined
   return players[0].id
+}
+
+interface RoomHeadlineProps extends React.ComponentProps<'h1'> {
+  roomId: string
+  gamePlayed: GameContext['gamePlayed']
+}
+function RoomHeadline({ gamePlayed, roomId, ...props }: RoomHeadlineProps) {
+  const content = gamePlayed ? whoPlaysWhat(gamePlayed) : `Runde - ${roomId}`
+
+  return (
+    <h1 css={fontSet.headline} {...props}>
+      {content}
+    </h1>
+  )
+}
+
+function whoPlaysWhat({ gameType, player }: Required<NonNullable<GameContext['gamePlayed']>>) {
+  return `${player.name} - ${gameType.type}${gameType?.icon ? ` ${gameType?.icon}` : ''}`
 }

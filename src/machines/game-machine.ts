@@ -1,5 +1,5 @@
+import { GameWithIcon } from 'components/bidding'
 import { Card } from 'model/card'
-import { WEITER } from 'model/game'
 import { Player } from 'model/player'
 import { Trick } from 'model/trick'
 import { assign, Machine, StateMachine } from 'xstate'
@@ -21,7 +21,7 @@ type MyEvents =
   | { type: 'START_AGAIN' }
   | { type: 'PLAY_CARD'; card: Card }
   | { type: 'TAKE_TRICK'; trick: Trick; player: Player }
-  | { type: 'CHOOSE_GAME'; gamePlayed: { gameType: string; player: Player } }
+  | { type: 'CHOOSE_GAME'; gamePlayed: { gameType: GameWithIcon; player: Player } | null }
 
 type TriggerEvents = { triggerId: string } & MyEvents
 
@@ -31,7 +31,7 @@ export type GameEvent = UpdatePlayersEvent | TriggerEvents
 export interface GameContext {
   players: Player[] // players[0] is active player
   stack: Card[]
-  gamePlayed: { gameType: string; player: Player } | null
+  gamePlayed: { gameType: GameWithIcon; player: Player } | null
   myId: string
   highlightCurrentPlayer: boolean
   playerThatStartedRound: string | null
@@ -66,7 +66,7 @@ export const gameMachine = Machine<GameContext, GameStateSchema, GameEvent>(
         always: [
           {
             target: 'playing',
-            cond: chosenGameIsNotWeiter,
+            cond: choseGame,
             actions: assign((c, e) => ({
               players: updateCurrentPlayer(c.playerThatStartedRound ?? c.players[0].id, c.players),
             })),
@@ -101,7 +101,7 @@ export const gameMachine = Machine<GameContext, GameStateSchema, GameEvent>(
           return {
             players: updateCurrentPlayer(e.triggerId, e.freshPlayers),
             stack: [],
-            gamePlayed: { gameType: WEITER, player: c.players[0] },
+            gamePlayed: null,
             highlightCurrentPlayer: true,
             playerThatStartedRound: e.triggerId,
           }
@@ -137,7 +137,7 @@ export const gameMachine = Machine<GameContext, GameStateSchema, GameEvent>(
     },
     guards: {
       fourPlayersInGame,
-      chosenGameIsNotWeiter,
+      chosenGameIsNotWeiter: choseGame,
     },
   },
 )
@@ -146,8 +146,8 @@ export function isItMyTurn(context: GameContext): boolean {
   return context.players[0].id === context.myId
 }
 
-function chosenGameIsNotWeiter(context: GameContext) {
-  return context.gamePlayed?.gameType !== WEITER
+function choseGame(context: GameContext) {
+  return Boolean(context.gamePlayed?.gameType)
 }
 
 function fourPlayersInGame(context: GameContext) {
