@@ -17,6 +17,10 @@ export const fontSet = {
   `,
 }
 
+export const mediaQuery = {
+  medium: '@media screen and (min-width: 768px)',
+} as const
+
 export function GlobalStyles() {
   return (
     <Global

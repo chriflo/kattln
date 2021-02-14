@@ -43,3 +43,13 @@ export function shuffleCards(): Card[] {
 export function generateId(name: CardName, icon: Icon): string {
   return `${icon}-${name}`
 }
+
+export const normalSortOrder: Array<CardName> = ['O', 'U', 'A', '10', 'K', '9', '8', '7']
+export function normalSortCards(c1: Card, c2: Card): 0 | 1 | -1 {
+  const indexC1 = normalSortOrder.indexOf(c1.name)
+  const indexC2 = normalSortOrder.indexOf(c2.name)
+
+  if (indexC2 > indexC1) return 1
+  if (indexC1 > indexC2) return -1
+  return 0
+}

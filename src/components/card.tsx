@@ -1,10 +1,12 @@
 import { css } from '@emotion/react'
 import React from 'react'
+import { mediaQuery } from 'styles/global'
 import { CardIcon } from './card-icons'
 
 type Card = import('model/card').Card
 
-export const cardHeight = 150
+export const cardHeightMobile = 150
+export const cardHeightDesktop = 200
 
 interface CardProps extends React.ComponentProps<'button'> {
   card: Card
@@ -31,8 +33,8 @@ const HalfCard = ({ card, ...props }: { card: Card }) => {
 }
 
 const cardStyles = css`
-  width: ${cardHeight / 2}px;
-  height: ${cardHeight}px;
+  width: ${cardHeightMobile / 2}px;
+  height: ${cardHeightMobile}px;
   border: 2px solid black;
   border-radius: 5px;
   position: relative;
@@ -46,6 +48,11 @@ const cardStyles = css`
     top: 50%;
     position: absolute;
     left: 0;
+  }
+
+  ${mediaQuery.medium} {
+    width: ${cardHeightDesktop / 2}px;
+    height: ${cardHeightDesktop}px;
   }
 `
 

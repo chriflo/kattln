@@ -1,11 +1,14 @@
 import { css } from '@emotion/react'
+import { normalSortCards } from 'model/card'
 import { Player } from 'model/player'
 import React from 'react'
-import { Card, cardHeight } from './card'
+import { mediaQuery } from 'styles/global'
+import { Card, cardHeightDesktop, cardHeightMobile } from './card'
 
 type Card = import('model/card').Card
 
-const overlap = 40
+const overlapMobile = 40
+const overlapDesktop = 60
 
 interface HandProps {
   players: Player[]
@@ -15,26 +18,17 @@ interface HandProps {
 }
 
 export function Hand({ players, currentPlayer, isItMyTurn = false, onClickCard }: HandProps) {
-  const cards = players.find((player) => player.id === currentPlayer.id)?.cards ?? []
+  const cards =
+    players.find((player) => player.id === currentPlayer.id)?.cards?.sort(normalSortCards) ?? []
   return (
-    <>
-      <div
-        css={css`
-          width: ${overlap * cards.length - 1 + cardHeight - overlap}px;
-          margin: '0 auto';
-          height: ${cardHeight}px;
-          position: absolute;
-          bottom: -${cardHeight / 2}px;
-        `}
-      >
-        <StackedCards
-          isItMyTurn={isItMyTurn}
-          cards={cards}
-          totalCards={cards.length}
-          onClickCard={onClickCard}
-        />
-      </div>
-    </>
+    <div css={styles.overLappingCardsWrapper(cards)}>
+      <StackedCards
+        isItMyTurn={isItMyTurn}
+        cards={cards}
+        totalCards={cards.length}
+        onClickCard={onClickCard}
+      />
+    </div>
   )
 }
 
@@ -45,11 +39,7 @@ function StackedCards({
   totalCards,
 }: Pick<HandProps, 'isItMyTurn' | 'onClickCard'> & { cards: Card[]; totalCards: number }) {
   const cardProps = {
-    css: {
-      top: 0,
-      position: 'absolute' as const,
-      margin: `0 0 0 ${overlap}px`,
-    },
+    css: styles.stackedCard,
     card: cards[cards.length - 1],
     isItMyTurn: Boolean(isItMyTurn),
     onClickCard,
@@ -83,4 +73,29 @@ function ClickableCard({
       {children ? children : null}
     </div>
   )
+}
+
+const styles = {
+  overLappingCardsWrapper: (cards: Card[]) => css`
+    width: ${overlapMobile * cards.length - 1 + cardHeightMobile - overlapMobile}px;
+    margin: '0 auto';
+    height: ${cardHeightMobile}px;
+    position: absolute;
+    bottom: -${cardHeightMobile / 2}px;
+
+    ${mediaQuery.medium} {
+      width: ${overlapDesktop * cards.length - 1 + cardHeightDesktop - overlapDesktop}px;
+      height: ${cardHeightDesktop}px;
+      bottom: -${cardHeightDesktop / 2}px;
+    }
+  `,
+  stackedCard: css`
+    top: 0;
+    position: absolute;
+    margin: 0 0 0 ${overlapMobile}px;
+
+    ${mediaQuery.medium} {
+      margin: 0 0 0 ${overlapDesktop}px;
+    }
+  `,
 }
