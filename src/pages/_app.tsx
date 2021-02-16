@@ -1,8 +1,9 @@
 import { Header, headerHeight } from 'components/header'
 import 'normalize.css'
-import { colors, GlobalStyles } from 'styles/global'
+import { colors, GlobalStyles, mediaQuery } from 'styles/global'
 import Head from 'next/head'
 import { PusherProvider } from '@harelpls/use-pusher'
+import { css } from '@emotion/react'
 
 const pusherConfig = {
   // required config props
@@ -42,9 +43,22 @@ export default function MyApp({ Component, pageProps }: { Component: any; pagePr
           }}
         >
           <Component {...pageProps} />
-          <div css={{ height: '100px', width: '100%', background: colors.mint, flexShrink: 0 }} />
+          <div css={styles.bottomStripe} />
         </main>
       </div>
     </PusherProvider>
   )
+}
+
+const styles = {
+  bottomStripe: css`
+    height: 100px;
+    width: 100%;
+    background: ${colors.mint};
+    flex-shrink: 0;
+
+    ${mediaQuery.medium} {
+      height: 140px;
+    }
+  `,
 }
