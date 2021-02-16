@@ -36,6 +36,14 @@ export function useSyncronizedRoom(
     if (state.event.triggerId === myId) {
       trigger('client-promote-event', { event: state.event, triggerId: myId })
     }
+
+    const jsonState = JSON.stringify(state)
+
+    try {
+      localStorage.setItem('app-state', jsonState)
+    } catch (e) {
+      console.error("couldn't save state to local storage", e)
+    }
   }, [state, myId, trigger])
 
   const members = getPlayersFromMembers(channel?.members)

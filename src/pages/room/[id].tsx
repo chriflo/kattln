@@ -45,7 +45,7 @@ interface GameMachineProps {
   roomId: string
 }
 
-function GameMachine({ roomId, send, me, state }: GameMachineProps) {
+export function GameMachine({ roomId, send, me, state }: GameMachineProps) {
   const { gamePlayed } = state.context
 
   return (
