@@ -1,26 +1,19 @@
+import { useSynchronizedRoom } from 'hooks/syncronized-room-provider'
 import { isItMyTurn } from 'machines/game-machine'
-import { GameContext, GameEvent } from 'machines/machine-model'
 import { allIcons, Icon } from 'model/card'
 import { PlayableGame, playableGames } from 'model/game'
-import { Player } from 'model/player'
 import React from 'react'
 import { colors } from 'styles/global'
-import { Sender } from 'xstate'
 import { Button } from './buttons'
 import { CardIcon } from './card-icons'
 import { Hand } from './hand'
 
-interface BiddingProps {
-  me: Player
-  context: GameContext
-  send: Sender<GameEvent>
-}
-
-export function Bidding({ me, context, send }: BiddingProps) {
-  const { players } = context
+export function Bidding() {
+  const { state, send, me } = useSynchronizedRoom()
+  const { players } = state.context
 
   function updateGameType(game: GameWithIcon | null) {
-    if (!isItMyTurn(context)) return
+    if (!isItMyTurn(state.context)) return
 
     const gamePlayed = !game ? null : { gameType: game, player: me }
     send({ type: 'CHOOSE_GAME', gamePlayed, triggerId: me.id })
@@ -29,7 +22,7 @@ export function Bidding({ me, context, send }: BiddingProps) {
   return (
     <>
       <GameChooser
-        isItMyTurn={isItMyTurn(context)}
+        isItMyTurn={isItMyTurn(state.context)}
         onChooseGame={(game) => updateGameType(game)}
         css={{ flexGrow: 1 }}
       />

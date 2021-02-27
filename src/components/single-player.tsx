@@ -1,17 +1,19 @@
 import React from 'react'
 import { css } from '@emotion/react'
 import { colors } from 'styles/global'
+import { useSynchronizedRoom } from 'hooks/syncronized-room-provider'
 
 export function SinglePlayer({
   name,
+  id,
   highlighted,
-  itsMe,
   ...props
 }: {
   name: string
+  id: string
   highlighted: boolean
-  itsMe: boolean
 }) {
+  const { me } = useSynchronizedRoom()
   return (
     <div
       css={css`
@@ -22,26 +24,44 @@ export function SinglePlayer({
       `}
       {...props}
     >
-      <PlayerIcon css={{ height: 40, width: 40 }} />
+      <PlayerIcon itsMe={me.id === id} css={{ height: 40, width: 40 }} />
       <p
         css={css`
           display: flex;
           justify-content: center;
           padding: 4px;
-          background: ${highlighted ? colors.green : colors.mint};
-          color: ${highlighted ? colors.mint : colors.green};
+          background: ${colors.mint};
+          color: ${colors.green};
         `}
-        key={name}
       >
-        {`${itsMe ? 'du - ' : ''}${name}`}
+        {name}
+        {highlighted ? (
+          <span
+            css={css`
+              padding: 4px;
+              font-size: 10px;
+              margin-left: 4px;
+              background: ${colors.green};
+              color: ${colors.mint};
+            `}
+          >
+            ist dran
+          </span>
+        ) : null}
       </p>
     </div>
   )
 }
 
-export function PlayerIcon(props: React.ComponentProps<'svg'>) {
+export function PlayerIcon({ itsMe, ...props }: { itsMe: boolean } & React.ComponentProps<'svg'>) {
   return (
-    <svg viewBox="0 0 24 24" {...props}>
+    <svg
+      viewBox="0 0 24 24"
+      css={css`
+        border: 2px solid ${itsMe ? colors.blue : 'transparent'};
+      `}
+      {...props}
+    >
       <rect width="24" height="24" fill="none" rx="0" ry="0" />
       <path
         d="M12.65 21.4039H3.61993C2.94989 21.4039 2.39996 20.8538 2.39996 20.1738C2.39996 18.0038 3.63995 15.7639 5.40997 14.1638C5.68988 14.4438 5.97992 14.7338 6.25995 15.0139C4.69989 16.3939 3.60004 18.3339 3.60004 20.1738L11.4299 20.1838C11.84 20.5938 12.2399 20.9938 12.65 21.4039Z"

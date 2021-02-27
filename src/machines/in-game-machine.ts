@@ -6,6 +6,10 @@ import { GameContext, GameEvent } from './machine-model'
 import { shiftPlayers, updateCurrentPlayer } from './players-helper'
 
 export const inGameMachine = {
+  on: {
+    PLAYER_LEFT: { actions: ['playerLeft'] },
+    PLAYER_ADDED: { actions: ['playerAdded'] },
+  },
   states: {
     bidding: {
       entry: ['shiftToPlayerThatStartedRound', 'initializeGame'],
@@ -34,7 +38,6 @@ export const inGameMachine = {
           actions: ['playCard', 'nextPlayer'],
           cond: 'lessThanFourCardsPlayed',
         },
-        FINISH_GAME: 'evaluation',
         TAKE_TRICK: {
           actions: ['takeTrick'],
           cond: 'fourCardsPlayed',

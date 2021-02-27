@@ -1,15 +1,10 @@
-import { GameContext, GameEvent } from 'machines/machine-model'
+import { useSynchronizedRoom } from 'hooks/syncronized-room-provider'
 import { shuffleCards } from 'model/card'
-import { Player } from 'model/player'
-import { Sender } from 'xstate'
 import { GameboyButton } from './buttons'
 
-interface LobbyProps {
-  me: Player
-  context: GameContext
-  send: Sender<GameEvent>
-}
-export function Lobby({ me, context, send }: LobbyProps) {
+export function Lobby() {
+  const { state, send, me } = useSynchronizedRoom()
+  const { context } = state
   const players = context?.players ?? []
   function onStartGame() {
     const mixedCards = shuffleCards()

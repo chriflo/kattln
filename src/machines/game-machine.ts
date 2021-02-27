@@ -1,4 +1,4 @@
-import { sort } from 'ramda'
+import { sort, uniq } from 'ramda'
 import { assign, Machine } from 'xstate'
 import { inGameActions, inGameGuards, inGameMachine } from './in-game-machine'
 import { GameContext, GameEvent, GameStateSchema } from './machine-model'
@@ -11,11 +11,25 @@ const actions = {
       stack: [],
       gamePlayed: null,
       highlightCurrentPlayer: false,
-      playerThatStartedRound: e.type !== 'UPDATE_PLAYERS' ? e.triggerId : c.playerThatStartedRound,
+      playerThatStartedRound:
+        e.type !== 'UPDATE_PLAYERS' && e.type !== 'PLAYER_LEFT' && e.type !== 'PLAYER_ADDED'
+          ? e.triggerId
+          : c.playerThatStartedRound,
+      unavailablePlayers: [],
     }
   }),
   updatePlayers: assign<GameContext, GameEvent>((c, e) =>
     e.type === 'UPDATE_PLAYERS' ? { players: sort(sortPlayersById, e.players) } : c,
+  ),
+  playerLeft: assign<GameContext, GameEvent>((c, e) =>
+    e.type === 'PLAYER_LEFT'
+      ? { unavailablePlayers: uniq([...c.unavailablePlayers, e.player]) }
+      : c,
+  ),
+  playerAdded: assign<GameContext, GameEvent>((c, e) =>
+    e.type === 'PLAYER_ADDED'
+      ? { unavailablePlayers: c.unavailablePlayers.filter((p) => p.id !== e.player.id) }
+      : c,
   ),
 }
 
@@ -26,7 +40,7 @@ const guards = {
 // This machine is completely decoupled from React
 export const gameMachine = Machine<GameContext, GameStateSchema, GameEvent>(
   {
-    strict: true,
+    // strict: true,
     id: 'game',
     initial: 'lobby',
     on: {
@@ -46,7 +60,6 @@ export const gameMachine = Machine<GameContext, GameStateSchema, GameEvent>(
         },
       },
       inGame: { initial: 'bidding', ...inGameMachine },
-      playerLeft: {},
     },
   },
   {

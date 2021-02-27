@@ -1,4 +1,5 @@
 import { useService } from '@xstate/react'
+import { SyncronizedRoomProvider } from 'hooks/syncronized-room-provider'
 import { gameMachine } from 'machines/game-machine'
 import { GameContext, GameEvent } from 'machines/machine-model'
 import { Player } from 'model/player'
@@ -17,7 +18,11 @@ export default function Room() {
 
   const [state, send] = useService(service)
 
-  return <GameMachine roomId={roomId} send={send} me={me} state={state} />
+  return (
+    <SyncronizedRoomProvider me={me} state={state} send={send} roomId={roomId}>
+      <GameMachine />
+    </SyncronizedRoomProvider>
+  )
 }
 
 const fakePlayer: Player = {
@@ -42,6 +47,7 @@ const takeTrickGameState = State.create<GameContext, GameEvent>({
   events: [],
   value: { inGame: 'playing' },
   context: {
+    unavailablePlayers: [],
     myId: '1pkseks7moy',
     players: [
       fakePlayer,
@@ -134,6 +140,7 @@ const takeTrickGameState = State.create<GameContext, GameEvent>({
     events: [],
     value: { inGame: 'playing' },
     context: {
+      unavailablePlayers: [],
       myId: '1pkseks7moy',
       players: [
         {

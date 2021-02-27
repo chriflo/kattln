@@ -1,17 +1,11 @@
-import { GameContext, GameEvent } from 'machines/machine-model'
+import { useSynchronizedRoom } from 'hooks/syncronized-room-provider'
 import { shuffleCards } from 'model/card'
-import { Player } from 'model/player'
 import React from 'react'
-import { Sender } from 'xstate'
 import { Button } from './buttons'
 
-interface EvaluationProps {
-  me: Player
-  context: GameContext
-  send: Sender<GameEvent>
-}
-
-export function Evaluation({ me, context, send }: EvaluationProps) {
+export function Evaluation() {
+  const { state, me, send } = useSynchronizedRoom()
+  const { context } = state
   const thisPlayer = context.players.find((player) => player.id === me.id)
   const myPoints = thisPlayer?.tricks?.reduce((prevPoints, curTrick) => {
     const trickPoints = curTrick.reduce((prevTrickPoints, curCard) => {

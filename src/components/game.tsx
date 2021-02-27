@@ -1,10 +1,8 @@
 import { css } from '@emotion/react'
+import { useSynchronizedRoom } from 'hooks/syncronized-room-provider'
 import { isItMyTurn } from 'machines/game-machine'
-import { GameContext, GameEvent } from 'machines/machine-model'
-import { allCards } from 'model/card'
-import { Player } from 'model/player'
+import { Trick } from 'model/trick'
 import React from 'react'
-import { Sender } from 'xstate'
 import { Button } from './buttons'
 import { Card } from './card'
 import { CardStack } from './card-stack'
@@ -12,13 +10,9 @@ import { Hand } from './hand'
 
 type Card = import('model/card').Card
 
-interface GameProps {
-  me: Player
-  context: GameContext
-  send: Sender<GameEvent>
-}
-
-export function Game({ me, context, send }: GameProps) {
+export function Game() {
+  const { send, state, me } = useSynchronizedRoom()
+  const { context } = state
   const { stack, players } = context
 
   function onSubmitCard(playedCard: Card) {
@@ -28,11 +22,9 @@ export function Game({ me, context, send }: GameProps) {
   }
 
   function onTakeTrick() {
-    send({ type: 'TAKE_TRICK', trick: stack, player: me, triggerId: me.id })
-  }
-
-  function onFinishGame() {
-    send({ type: 'FINISH_GAME', triggerId: me.id })
+    if (stack.length === 4) {
+      send({ type: 'TAKE_TRICK', trick: stack as Trick, player: me, triggerId: me.id })
+    }
   }
 
   return (
