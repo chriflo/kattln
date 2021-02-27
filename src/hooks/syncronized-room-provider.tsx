@@ -12,20 +12,25 @@ interface SyncronizedRoomProviderProps {
   roomId?: string
   me: Player
   children: React.ReactNode
+  stateOverride?: State<GameContext, GameEvent>
 }
-export function SyncronizedRoomProvider({ roomId, me, children }: SyncronizedRoomProviderProps) {
-  const [inGame] = React.useState(() => {
-    if (typeof window === 'undefined') return false
-    return Boolean(getWithExpiry('in-game'))
-  })
+export function SyncronizedRoomProvider({
+  roomId,
+  me,
+  children,
+  stateOverride,
+}: SyncronizedRoomProviderProps) {
+  const [appState] = React.useState(() => {
+    if (typeof window === 'undefined') return undefined
 
-  const [appState] = React.useState(
-    () => JSON.parse(getWithExpiry('app-state')) as State<GameContext, GameEvent>,
-  )
+    return JSON.parse(getWithExpiry('app-state')) as State<GameContext, GameEvent>
+  })
 
   const [state, send] = useMachine<GameContext, GameEvent>(
     gameMachine.withContext(
-      inGame
+      stateOverride
+        ? stateOverride.context
+        : appState
         ? appState.context
         : {
             myId: me.id,
@@ -37,7 +42,7 @@ export function SyncronizedRoomProvider({ roomId, me, children }: SyncronizedRoo
             unavailablePlayers: [],
           },
     ),
-    { state: appState },
+    { state: stateOverride ? stateOverride : appState ? appState : undefined },
   )
 
   const { myId } = state.context
@@ -129,8 +134,7 @@ function useSynchronization(
     const jsonState = JSON.stringify(state)
 
     try {
-      setWithExpiry('app-state', jsonState, 5 * 60000)
-      state.matches('inGame') && setWithExpiry('in-game', true, 5 * 60000)
+      state.matches('inGame') && setWithExpiry('app-state', jsonState, 5 * 60000)
     } catch (e) {
       console.error("couldn't save state to local storage", e)
     }

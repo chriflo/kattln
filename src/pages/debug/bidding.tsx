@@ -1,27 +1,17 @@
-import { useService } from '@xstate/react'
 import { SyncronizedRoomProvider } from 'hooks/syncronized-room-provider'
 import { useForceUserName } from 'hooks/use-force-user-name'
-import { gameMachine } from 'machines/game-machine'
 import { GameContext, GameEvent } from 'machines/machine-model'
 import { Player } from 'model/player'
 import React from 'react'
-import { interpret, State } from 'xstate'
+import { State } from 'xstate'
 import { GameMachine } from '../room/[id]'
 
 export default function Room() {
   const me = useForceUserName()
 
-  const [service] = React.useState(() => {
-    const resolvedState = gameMachine.resolveState(biddingGameState(me))
-    const interpretedService = interpret(gameMachine).start(resolvedState)
-    return interpretedService
-  })
-
-  const [state, send] = useService(service)
-
   const roomId = 'fakeRoomId'
   return (
-    <SyncronizedRoomProvider me={me} state={state} send={send} roomId={roomId}>
+    <SyncronizedRoomProvider me={me} stateOverride={biddingGameState(me)} roomId={roomId}>
       <GameMachine />
     </SyncronizedRoomProvider>
   )
