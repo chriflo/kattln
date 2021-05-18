@@ -2,7 +2,7 @@ import { css } from '@emotion/react'
 import React from 'react'
 import { colors } from 'styles/global'
 
-export function Header(props: any) {
+export function Header(props: unknown) {
   return (
     <header css={headerStyles} {...props}>
       <h1>Kattln</h1>

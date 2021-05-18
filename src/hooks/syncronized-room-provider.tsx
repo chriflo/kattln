@@ -1,18 +1,17 @@
 import { useClientTrigger, useEvent, usePresenceChannel } from '@harelpls/use-pusher'
-import { useMachine } from '@xstate/react'
-import { gameMachine } from 'machines/game-machine'
-import { GameContext, GameEvent } from 'machines/machine-model'
+import { GameEvent, SetGameState, useGameState } from 'machines/game-state-reducer'
+import { GameState } from 'machines/machine-model'
 import { Player } from 'model/player'
 import { getPlayersFromMembers, PusherMember } from 'model/pusher-members'
 import { PresenceChannel } from 'pusher-js'
 import React from 'react'
-import { Sender, State } from 'xstate'
+import { setWithExpiry } from 'utils/local-storage-with-expiry'
 
 interface SyncronizedRoomProviderProps {
   roomId?: string
   me: Player
   children: React.ReactNode
-  stateOverride?: State<GameContext, GameEvent>
+  stateOverride?: GameState
 }
 export function SyncronizedRoomProvider({
   roomId,
@@ -20,47 +19,22 @@ export function SyncronizedRoomProvider({
   children,
   stateOverride,
 }: SyncronizedRoomProviderProps) {
-  const [appState] = React.useState(() => {
-    if (typeof window === 'undefined') return undefined
-
-    return JSON.parse(getWithExpiry('app-state')) as State<GameContext, GameEvent>
-  })
-
-  const [state, send] = useMachine<GameContext, GameEvent>(
-    gameMachine.withContext(
-      stateOverride
-        ? stateOverride.context
-        : appState
-        ? appState.context
-        : {
-            myId: me.id,
-            players: [me],
-            stack: [],
-            gamePlayed: null,
-            highlightCurrentPlayer: false,
-            playerThatStartedRound: null,
-            unavailablePlayers: [],
-          },
-    ),
-    { state: stateOverride ? stateOverride : appState ? appState : undefined },
-  )
-
-  const { myId } = state.context
+  const { gameState, setGameState } = useGameState(me, stateOverride, roomId)
   const { channel } = usePresenceChannel(roomId ? `presence-${roomId}` : undefined)
 
-  useSynchronization(myId, send, state, channel)
+  useSynchronization(me.id, setGameState, gameState, roomId, channel)
 
   return (
-    <SynchronizedRoom.Provider value={{ state: state, me, send, roomId }}>
+    <SynchronizedRoom.Provider value={{ state: gameState, me, send: setGameState, roomId }}>
       {children}
     </SynchronizedRoom.Provider>
   )
 }
 
-const SynchronizedRoom = React.createContext<
-  | { me: Player; roomId?: string; state: State<GameContext, GameEvent>; send: Sender<GameEvent> }
-  | undefined
->(undefined)
+const SynchronizedRoom =
+  React.createContext<
+    { me: Player; roomId?: string; state: GameState; send: SetGameState } | undefined
+  >(undefined)
 
 export function useSynchronizedRoom() {
   const context = React.useContext(SynchronizedRoom)
@@ -72,47 +46,18 @@ export function useSynchronizedRoom() {
   return context
 }
 
-function setWithExpiry(key: string, value: unknown, ttl: number) {
-  const now = new Date()
-
-  // `item` is an object which contains the original value
-  // as well as the time when it's supposed to expire
-  const item = {
-    value: value,
-    expiry: now.getTime() + ttl,
-  }
-  localStorage.setItem(key, JSON.stringify(item))
-}
-
-export function getWithExpiry(key: string) {
-  const itemStr = localStorage.getItem(key)
-  // if the item doesn't exist, return null
-  if (!itemStr) {
-    return null
-  }
-  const item = JSON.parse(itemStr)
-  const now = new Date()
-  // compare the expiry time of the item with the current time
-  if (now.getTime() > item.expiry) {
-    // If the item is expired, delete the item from storage
-    // and return null
-    localStorage.removeItem(key)
-    return null
-  }
-  return item.value
-}
-
 function useSynchronization(
   myId: string,
-  send: Sender<GameEvent>,
-  state: State<GameContext, GameEvent>,
+  send: SetGameState,
+  state: GameState,
+  roomId?: string,
   channel?: PresenceChannel,
 ) {
   const trigger = useClientTrigger<{ event: GameEvent; triggerId: string }>(channel)
 
   useEvent(
     channel,
-    'client-promote-event',
+    'client-promote-shared-state',
     ({ event, triggerId }: { event: GameEvent; triggerId: string }) => {
       if (triggerId !== myId) {
         send(event)
@@ -122,23 +67,28 @@ function useSynchronization(
 
   React.useEffect(() => {
     if (
-      state.event.type === 'UPDATE_PLAYERS' ||
-      state.event.type === 'PLAYER_LEFT' ||
-      state.event.type === 'PLAYER_ADDED'
+      state.lastEvent === 'UPDATE_PLAYERS_IN_LOBBY' ||
+      state.lastEvent === 'PLAYER_LEFT_IN_GAME' ||
+      state.lastEvent === 'PLAYER_ADDED_IN_GAME'
     )
       return
-    if (state.event.triggerId === myId) {
-      trigger('client-promote-event', { event: state.event, triggerId: myId })
+    if (state.triggerId === myId) {
+      trigger('client-promote-shared-state', {
+        event: { type: 'SHARE_STATE', gameState: state, triggerId: myId },
+        triggerId: myId,
+      })
     }
+  }, [myId, trigger, state])
 
-    const jsonState = JSON.stringify(state)
+  const jsonState = JSON.stringify(state)
 
-    try {
-      state.matches('inGame') && setWithExpiry('app-state', jsonState, 5 * 60000)
-    } catch (e) {
-      console.error("couldn't save state to local storage", e)
-    }
-  }, [state, myId, trigger])
+  try {
+    roomId &&
+      state.name.startsWith('inGame') &&
+      setWithExpiry(`app-state-${roomId}`, jsonState, 5 * 60000)
+  } catch (e) {
+    console.error("couldn't save state to local storage", e)
+  }
 
   const members = getPlayersFromMembers(channel?.members)
 
@@ -146,18 +96,20 @@ function useSynchronization(
   React.useEffect(() => {
     if (!bound && channel) {
       channel?.bind('pusher:member_removed', (member: PusherMember) => {
-        send({ type: 'PLAYER_LEFT', player: { name: member.info.name, id: member.id } })
+        state.name.startsWith('inGame') &&
+          send({ type: 'PLAYER_LEFT_IN_GAME', player: { name: member.info.name, id: member.id } })
       })
       channel?.bind('pusher:member_added', (member: PusherMember) => {
-        send({ type: 'PLAYER_ADDED', player: { name: member.info.name, id: member.id } })
+        state.name.startsWith('inGame') &&
+          send({ type: 'PLAYER_ADDED_IN_GAME', player: { name: member.info.name, id: member.id } })
       })
       setBound(true)
     }
-  }, [channel, members, send, myId, bound])
+  }, [channel, members, send, myId, bound, state.name])
 
   React.useEffect(() => {
-    if (state.context.players.length !== members.length) {
-      send({ type: 'UPDATE_PLAYERS', players: members })
+    if (state.players.length !== members.length) {
+      state.name === 'lobby' && send({ type: 'UPDATE_PLAYERS_IN_LOBBY', players: members })
     }
-  }, [members, send, state.context.players.length])
+  }, [members, send, state.players.length, state.name])
 }

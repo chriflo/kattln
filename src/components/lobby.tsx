@@ -4,8 +4,7 @@ import { GameboyButton } from './buttons'
 
 export function Lobby() {
   const { state, send, me } = useSynchronizedRoom()
-  const { context } = state
-  const players = context?.players ?? []
+  const players = state?.players ?? []
   function onStartGame() {
     const mixedCards = shuffleCards()
     const freshPlayers = players.map((player, index) => {

@@ -20,7 +20,7 @@
   },
   "overrides": [
     {
-      "files": ["**/*.tsx"],
+      "files": ["**/*.ts*"],
       "rules": {
         "@typescript-eslint/explicit-module-boundary-types": "off", // We don't want to enforce return types on react components
         "react/react-in-jsx-scope": "off" // not needed when using nextjs

@@ -8,7 +8,7 @@ import { SinglePlayer } from 'components/single-player'
 import { Spinner } from 'components/spinner'
 import { SyncronizedRoomProvider, useSynchronizedRoom } from 'hooks/syncronized-room-provider'
 import { useForceUserName } from 'hooks/use-force-user-name'
-import { GameContext } from 'machines/machine-model'
+import { GameState } from 'machines/machine-model'
 import { sortPlayersById } from 'machines/players-helper'
 import { Player } from 'model/player'
 import { useRouter } from 'next/router'
@@ -30,9 +30,9 @@ export default function Room() {
 
 export function GameMachine() {
   const { state } = useSynchronizedRoom()
-  const { gamePlayed } = state.context
+  const { gamePlayed } = state
 
-  const unavailablePlayersInGame = state.context.unavailablePlayers.length > 0
+  const unavailablePlayersInGame = state.unavailablePlayers.length > 0
 
   if (unavailablePlayersInGame) {
     return (
@@ -50,7 +50,7 @@ export function GameMachine() {
           <Spinner css={{ marginBottom: 20 }} />
           Es sind nicht alle Spieler in der Runde.
           <br />
-          Warten auf {state.context.unavailablePlayers.map((p) => p.name).join(', ')}
+          Warten auf {state.unavailablePlayers.map((p) => p.name).join(', ')}
         </p>
       </>
     )
@@ -69,10 +69,10 @@ export function GameMachine() {
           flexShrink: 0,
         }}
       />
-      {state.matches('inGame.bidding') ? <Bidding css={{ flexShrink: 0 }} /> : null}
-      {state.matches('inGame.playing') ? <Game css={{ flexShrink: 0 }} /> : null}
-      {state.matches('lobby') ? <Lobby css={{ flexShrink: 0 }} /> : null}
-      {state.matches('inGame.evaluation') ? <Evaluation /> : null}
+      {state.name === 'inGame.bidding' ? <Bidding css={{ flexShrink: 0 }} /> : null}
+      {state.name === 'inGame.playing' ? <Game css={{ flexShrink: 0 }} /> : null}
+      {state.name === 'lobby' ? <Lobby css={{ flexShrink: 0 }} /> : null}
+      {state.name === 'inGame.evaluation' ? <Evaluation /> : null}
     </>
   )
 }
@@ -93,8 +93,7 @@ function ResetButton(props: unknown) {
 
 function Players(props: React.ComponentProps<'ul'>) {
   const { state } = useSynchronizedRoom()
-  const { context } = state
-  const sortedPlayers = sort(sortPlayersById, context.players)
+  const sortedPlayers = sort(sortPlayersById, state.players)
 
   return (
     <ul {...props}>
@@ -103,7 +102,7 @@ function Players(props: React.ComponentProps<'ul'>) {
           id={id}
           key={id}
           name={name}
-          highlighted={context.highlightCurrentPlayer && id === context.players[0].id}
+          highlighted={state.highlightCurrentPlayer && id === state.players[0].id}
         />
       ))}
     </ul>
@@ -122,7 +121,7 @@ export function currentPlayerId(players: Player[]): string | undefined {
 }
 
 interface RoomHeadlineProps extends React.ComponentProps<'h1'> {
-  gamePlayed: GameContext['gamePlayed']
+  gamePlayed: GameState['gamePlayed']
 }
 function RoomHeadline({ gamePlayed, ...props }: RoomHeadlineProps) {
   const content = gamePlayed ? whoPlaysWhat(gamePlayed) : `Schafkopf`
@@ -134,6 +133,6 @@ function RoomHeadline({ gamePlayed, ...props }: RoomHeadlineProps) {
   )
 }
 
-function whoPlaysWhat({ gameType, player }: Required<NonNullable<GameContext['gamePlayed']>>) {
+function whoPlaysWhat({ gameType, player }: Required<NonNullable<GameState['gamePlayed']>>) {
   return `${player.name} spielt ${gameType.type}${gameType?.icon ? ` ${gameType?.icon}` : ''}`
 }

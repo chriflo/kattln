@@ -5,8 +5,7 @@ import { Button } from './buttons'
 
 export function Evaluation() {
   const { state, me, send } = useSynchronizedRoom()
-  const { context } = state
-  const thisPlayer = context.players.find((player) => player.id === me.id)
+  const thisPlayer = state.players.find((player) => player.id === me.id)
   const myPoints = thisPlayer?.tricks?.reduce((prevPoints, curTrick) => {
     const trickPoints = curTrick.reduce((prevTrickPoints, curCard) => {
       return prevTrickPoints + curCard.value
@@ -15,7 +14,7 @@ export function Evaluation() {
   }, 0)
 
   function onNextRound() {
-    const { players } = context
+    const { players } = state
     const mixedCards = shuffleCards()
     const freshPlayers = players.map((player, index) => {
       const cardsForPlayer = mixedCards.filter(

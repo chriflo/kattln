@@ -1,6 +1,6 @@
 import { css } from '@emotion/react'
+import { isItMyTurn } from 'machines/game-state-reducer'
 import { useSynchronizedRoom } from 'hooks/syncronized-room-provider'
-import { isItMyTurn } from 'machines/game-machine'
 import { Trick } from 'model/trick'
 import React from 'react'
 import { Button } from './buttons'
@@ -12,11 +12,10 @@ type Card = import('model/card').Card
 
 export function Game() {
   const { send, state, me } = useSynchronizedRoom()
-  const { context } = state
-  const { stack, players } = context
+  const { players, stack } = state
 
   function onSubmitCard(playedCard: Card) {
-    if (!isItMyTurn(context)) return
+    if (!isItMyTurn(state, me.id)) return
 
     send({ type: 'PLAY_CARD', card: playedCard, triggerId: me.id })
   }
@@ -43,10 +42,10 @@ export function Game() {
       <Hand
         players={players}
         currentPlayer={me}
-        isItMyTurn={isItMyTurn(context)}
+        isItMyTurn={isItMyTurn(state, me.id)}
         onClickCard={(card: Card) => onSubmitCard(card)}
       />
-      {context.stack.length === 4 && (
+      {state.stack.length === 4 && (
         <Button css={{ margin: 10 }} onClick={() => onTakeTrick()}>
           Stich nehmen
         </Button>

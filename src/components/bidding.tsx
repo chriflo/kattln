@@ -1,5 +1,5 @@
+import { isItMyTurn } from 'machines/game-state-reducer'
 import { useSynchronizedRoom } from 'hooks/syncronized-room-provider'
-import { isItMyTurn } from 'machines/game-machine'
 import { allIcons, Icon } from 'model/card'
 import { PlayableGame, playableGames } from 'model/game'
 import React from 'react'
@@ -10,10 +10,10 @@ import { Hand } from './hand'
 
 export function Bidding() {
   const { state, send, me } = useSynchronizedRoom()
-  const { players } = state.context
+  const { players } = state
 
   function updateGameType(game: GameWithIcon | null) {
-    if (!isItMyTurn(state.context)) return
+    if (!isItMyTurn(state, me.id)) return
 
     const gamePlayed = !game ? null : { gameType: game, player: me }
     send({ type: 'CHOOSE_GAME', gamePlayed, triggerId: me.id })
@@ -22,7 +22,7 @@ export function Bidding() {
   return (
     <>
       <GameChooser
-        isItMyTurn={isItMyTurn(state.context)}
+        isItMyTurn={isItMyTurn(state, me.id)}
         onChooseGame={(game) => updateGameType(game)}
         css={{ flexGrow: 1 }}
       />

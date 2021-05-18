@@ -4,6 +4,7 @@ import { colors, GlobalStyles, mediaQuery } from 'styles/global'
 import Head from 'next/head'
 import { PusherProvider } from '@harelpls/use-pusher'
 import { css } from '@emotion/react'
+import { AppProps } from 'next/dist/next-server/lib/router/router'
 
 const pusherConfig = {
   // required config props
@@ -12,7 +13,7 @@ const pusherConfig = {
   authEndpoint: '/api/auth',
 }
 
-export default function MyApp({ Component, pageProps }: { Component: any; pageProps: any }) {
+export default function MyApp({ Component, pageProps }: AppProps) {
   return (
     <PusherProvider {...pusherConfig}>
       <div
